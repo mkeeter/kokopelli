@@ -35,8 +35,8 @@ class FabVars(object):
         return self._render_mode
     @render_mode.setter
     def render_mode(self, value):
-        if value not in ['height','shaded',None]:
-            raise TypeError("render_mode must be 'height' or 'shaded'")
+        if value not in ['2D','3D',None]:
+            raise TypeError("render_mode must be '2D' or '3D'")
         self._render_mode = value
 
     @property
