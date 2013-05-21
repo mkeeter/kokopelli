@@ -133,7 +133,7 @@ class App(wx.App):
             koko.FRAME.show_output(False)
             koko.FRAME.get_menu('View','Re-render').Enable(False)
             for e in ['.math','.png','.svg','.stl',
-                      '.dot','.asdf','Start fab modules']:
+                      '.dot','.asdf']:
                 koko.FRAME.get_menu('Export', e).Enable(False)
             koko.FRAME.get_menu('Export','Show CAM panel').Check(True)
             koko.FRAME.show_cam(True)
@@ -146,7 +146,7 @@ class App(wx.App):
             koko.FRAME.get_menu('View','Show output').Enable(True)
             koko.FRAME.get_menu('View','Re-render').Enable(True)
             for e in ['.math','.png','.svg','.stl',
-                      '.dot','.asdf','Start fab modules']:
+                      '.dot','.asdf']:
                 koko.FRAME.get_menu('Export', e).Enable(True)
 
 ################################################################################
@@ -516,12 +516,6 @@ class App(wx.App):
         path = os.path.join(*df)
 
         koko.TASKS.export(path, resolution, checked)
-
-################################################################################
-
-    def start_fab(self, event=None):
-        ''' Starts the fab modules.'''
-        koko.TASKS.start_fab()
 
 ################################################################################
 

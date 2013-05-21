@@ -4,7 +4,7 @@ import random
 
 import koko
 from   koko.render import RenderTask, RefineTask, CollapseTask
-from   koko.export import ExportTask, FabTask
+from   koko.export import ExportTask
 
 class TaskBot(object):
     """ @class TaskBot
@@ -24,10 +24,6 @@ class TaskBot(object):
         ## @var export_task
         # An ExportTask exporting the current model
         self.export_task    = None
-
-        ## @var fab_task
-        # A FabTask in charge of running the fab modules
-        self.fab_task       = None
 
         ## @var cam_task
         # A threading.Thread generating a CAM toolpath
@@ -64,15 +60,6 @@ class TaskBot(object):
                                       resolution, decimate)
 
 
-    def start_fab(self):
-        """ @brief Starts the fab modules running.
-            @details The FabTask is stored in self.fab_task
-        """
-        if self.cached_cad is None:
-            dialogs.warning('Design needs to be succesfully rendered before opening fab modules!')
-            return
-        self.fab_task = FabTask(self.cached_cad)
-
     def start_cam(self):
         """ @brief Starts a CAM path generation task
             @details The CAM thread is stored in self.cam_task.
@@ -105,9 +92,6 @@ class TaskBot(object):
 
             @details Grabs the cad data structure from render threads, storing
             it as cached_cad (for later re-use).
-
-            Re-writes the cad data structure to file if the fab modules
-            are running in the fab_task thread.
         """
 
         for task in filter(lambda t: not t.thread.is_alive(), self.tasks):
@@ -116,14 +100,7 @@ class TaskBot(object):
             task.thread.join()
             task.thread = None
 
-            try:   self.cached_cad.write(self.fab_task.file)
-            except AttributeError:  pass
-
         self.tasks = filter(lambda t: t.thread is not None, self.tasks)
-
-        if self.fab_task:
-            if self.fab_task.poll() is not None:
-                self.fab_task = None
 
         if self.cam_task and not self.cam_task.is_alive():
             self.cam_task.join()
@@ -144,7 +121,7 @@ class TaskBot(object):
         if not koko.GLCANVAS.IsShown(): return
 
         if (self.export_task is not None or self.refine_task is not None or
-            self.fab_task is not None or self.cam_task is not None):
+            self.cam_task is not None):
             return
 
         if koko.GLCANVAS.border:    return

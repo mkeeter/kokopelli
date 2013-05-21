@@ -237,8 +237,6 @@ class MainFrame(wx.Frame):
         export.AppendSeparator()
         attach(export, '.asdf', app.export, help='Export to .asdf file')
         export.AppendSeparator()
-        fab = attach(export, 'Start fab modules', app.start_fab,
-               help='Load file in fab modules')
         attach(export, 'Show CAM panel', self.show_cam, 'Ctrl+M', '',
                attach_function=export.AppendCheckItem)
 

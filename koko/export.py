@@ -262,15 +262,3 @@ class ExportTask(object):
 
         wx.CallAfter(self.window.Destroy)
 
-
-################################################################################
-
-class FabTask(subprocess.Popen):
-    def __init__(self, cad):
-        self.file = tempfile.NamedTemporaryFile(suffix='.math')
-        cad.write(self.file)
-        self.ptime = 0
-        subprocess.Popen.__init__(self, ['fab', self.file.name])
-
-    def update(self, cad):
-        cad.write(self.file)
