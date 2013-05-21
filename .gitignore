@@ -4,6 +4,8 @@
 libfab/libfab.dylib
 libfab/libfab.so
 build/*
+util/app/ko.icns
+util/app/kokopelli.app
 
 util/doxygen/*/html/*
 util/doxygen/*/latex/*
