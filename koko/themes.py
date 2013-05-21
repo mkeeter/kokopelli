@@ -79,20 +79,20 @@ SOLARIZED_THEME = Theme(
      txt=[
         (wx.stc.STC_STYLE_DEFAULT,    '#002b36' '#002b36'), # base00
         (wx.stc.STC_STYLE_LINENUMBER, '#073642','#839496'),
-        (wx.stc.STC_P_CHARACTER,      '#d33682'), # magenta
+        (wx.stc.STC_P_CHARACTER,      '#2aa198'), # cyan
         (wx.stc.STC_P_CLASSNAME,      '#268bd2'), # blue
         (wx.stc.STC_P_COMMENTBLOCK,   '#586e75'), # base01
-        (wx.stc.STC_P_COMMENTLINE,    '#859900'), # base0
+        (wx.stc.STC_P_COMMENTLINE,    '#586e75'), # base01
         (wx.stc.STC_P_DEFAULT,        '#657b83'), # base00
         (wx.stc.STC_P_DEFNAME,        '#268bd2'), # blue
         (wx.stc.STC_P_IDENTIFIER,     '#657b83'), # base00
-        (wx.stc.STC_P_NUMBER,         '#657b83'), # base00
+        (wx.stc.STC_P_NUMBER,         '#2aa198'), # blue
         (wx.stc.STC_P_OPERATOR,       '#657b83'), # base00
-        (wx.stc.STC_P_STRING,         '#d33682'), # magenta
+        (wx.stc.STC_P_STRING,         '#2aa198'), # cyan
         (wx.stc.STC_P_STRINGEOL,      '#657b83'), # base00
         (wx.stc.STC_P_TRIPLE,         '#dc322f'), # red
         (wx.stc.STC_P_TRIPLEDOUBLE,   '#268bd2'), # blue
-        (wx.stc.STC_P_WORD,           '#b5dcff')  # blue
+        (wx.stc.STC_P_WORD,           '#cb4b16')  # green
     ],
     background='#002b36',   # base03
     header='#073642',       # base02
