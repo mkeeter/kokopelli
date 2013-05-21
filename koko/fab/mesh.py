@@ -251,8 +251,6 @@ class Mesh(object):
         ptrs = (ctypes.POINTER(_Mesh) * len(meshes))(
                 *[m.ptr for m in meshes]
         )
-        for i in range(len(meshes)):
-            meshes[i].save_stl('test%i.stl' % i)
         m = cls(libfab.merge_meshes(len(meshes), ptrs))
         return m
 

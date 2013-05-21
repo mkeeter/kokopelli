@@ -539,7 +539,7 @@ class GLCanvas(glcanvas.GLCanvas):
 
     def draw_mesh(self, shader):
 
-        if shader == 'Show wireframe':
+        if shader == 'Wireframe':
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         else:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
