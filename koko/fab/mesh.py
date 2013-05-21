@@ -140,9 +140,8 @@ class Mesh(object):
             meshes.append(mesh)
 
         self.children = meshes
-        self.vdata = self.idata = None
-        self.vcount = self.icount = self.tcount = None
-
+        libfab.free_mesh(self.ptr)
+        self.ptr = None
 
 
     def expandable(self):
