@@ -200,22 +200,12 @@ class MainFrame(wx.Frame):
 
         view.AppendSeparator()
 
-        axes = wx.Menu()
-        for a in ['+x','-x','+y','-y','+z','-z']:
-            self.Bind(wx.EVT_MENU, app.snap_axis,
-                      axes.Append(wx.ID_ANY, a))
-        view.AppendMenu(wx.ID_ANY, 'View along axis', axes)
-
-        view.AppendSeparator()
-
         attach(view, 'Show axes', lambda e: self.Refresh(),
                'Display X, Y, and Z axes on frame',
                attach_function=view.AppendCheckItem)
         attach(view, 'Show bounds', lambda e: self.Refresh(),
                'Display object bounds',
                attach_function=view.AppendCheckItem)
-        attach(view, 'Snap to bounds', app.snap_bounds,
-              'Snap to object bounding box')
         attach(view, 'Show traverses', lambda e: self.Refresh(),
                'Display toolpath traverses',
                attach_function=view.AppendCheckItem)

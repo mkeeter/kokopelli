@@ -35,6 +35,7 @@ class GLCanvas(glcanvas.GLCanvas):
         self.Bind(wx.EVT_PAINT,      self.evt_paint)
 
         self.Bind(wx.EVT_LEFT_DOWN,  self.evt_mouse_left_down)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.mouse_rclick)
         self.Bind(wx.EVT_LEFT_UP,    self.evt_mouse_left_up)
         self.Bind(wx.EVT_MOTION,     self.evt_mouse_move)
         self.Bind(wx.EVT_MOUSEWHEEL, self.evt_mouse_scroll)
@@ -911,16 +912,29 @@ class GLCanvas(glcanvas.GLCanvas):
     def snap_axis(self, axis):
         ''' Snaps to view along a particular axis. '''
 
-        if axis == '+x':
+        if axis == '-x':
             self.alpha, self.beta = 90, 90
-        elif axis == '+y':
+        elif axis == '-y':
             self.alpha, self.beta = 0, 90
         elif axis == '+z':
             self.alpha, self.beta = 0, 0
-        elif axis == '-x':
+        elif axis == '+x':
             self.alpha, self.beta = 270, 90
-        elif axis == '-y':
+        elif axis == '+y':
             self.alpha, self.beta = 180, 90
         elif axis == '-z':
             self.alpha, self.beta = 0, 180
         self.Refresh()
+
+    def mouse_rclick(self, event):
+        menu = wx.Menu()
+        snap = menu.Append(wx.ID_ANY, text='Snap to bounds')
+        self.Bind(wx.EVT_MENU, lambda e: self.snap_bounds(), snap)
+
+        axes = wx.Menu()
+        for a in ['+x','-x','+y','-y','+z','-z']:
+            self.Bind(wx.EVT_MENU, lambda e,x=a: self.snap_axis(x),
+                      axes.Append(wx.ID_ANY, a))
+        menu.AppendMenu(wx.ID_ANY, 'View axis', axes)
+        self.PopupMenu(menu)
+

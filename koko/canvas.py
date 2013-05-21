@@ -168,6 +168,9 @@ class Canvas(wx.Panel):
 
         menu.AppendSeparator()
 
+        snap = menu.Append(wx.ID_ANY, text='Snap to bounds')
+        self.Bind(wx.EVT_MENU, lambda e: self.snap_bounds(), snap)
+
         # Get the a target primitive to delete
         self.mouse = wx.Point(event.GetX(), event.GetY())
         x, y = self.pixel_to_pos(*self.mouse)
