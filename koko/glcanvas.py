@@ -562,11 +562,11 @@ class GLCanvas(glcanvas.GLCanvas):
         color_loc = glGetUniformLocation(current_shader, 'color')
 
         # Loop over meshes
-        for vertex_vbo, index_vbo, tcounts, _, mesh in self.mesh_vbos:
+        for vertex_vbo, index_vbo, tcounts, multires, mesh in self.mesh_vbos:
             vertex_vbo.bind()
             index_vbo.bind()
 
-            (r,g,b) = mesh.color if mesh.color else (255, 255, 255)
+            (r,g,b) = multires.color if multires.color else (255, 255, 255)
 
             if color_loc != -1:
                 glUniform4f(color_loc, r/255., g/255., b/255., 1)
