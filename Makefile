@@ -3,6 +3,6 @@ all:
 	cd build && cmake ../libfab && make && make install
 
 install: all
-	cp -rf kokopelli koko /usr/local/bin
-	cp -rf libfab/libfab.* /usr/local/lib
+	cp -rf kokopelli koko /usr/local/bin/
+	cp -rf libfab/libfab.* /usr/local/lib/
 	if which ldconfig; then ldconfig; fi
