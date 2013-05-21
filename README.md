@@ -12,9 +12,15 @@ The CAM tools enable path planning for two, three, and five-axis machines.  At t
 
 In addition, models can be saved as `.svg` and water-tight `.stl` files.
 
+Download
+========
+`kokopelli` has been tested on Mac OS 10.6+ and Ubuntu 12.04 LTS.  
+A Mac application is available [here](http://tmp.cba.mit.edu/web/mkeeter/kokopelli.zip).  
+To build from source, check out the instructions on the [wiki](https://github.com/mkeeter/kokopelli/wiki/Installing).
+
 License
 =======
-This work may be reproduced, modified, distributed, performed, and displayed for any purpose, but must acknowledge the "kokopelli" project. Copyright is retained and must be preserved. The work is provided as is; no warranty is provided, and users accept all liability.
+This work may be reproduced, modified, distributed, performed, and displayed for any purpose, but must acknowledge the `kokopelli` project. Copyright is retained and must be preserved. The work is provided as is; no warranty is provided, and users accept all liability.
 
 Copyright
 =========

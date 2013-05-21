@@ -67,3 +67,5 @@ shutil.os.remove('kokopelli.py')
 
 shutil.move('dist/kokopelli.app', '.')
 shutil.rmtree('dist')
+
+subprocess.call('zip -r kokopelli README kokopelli.app'.split(' '))
