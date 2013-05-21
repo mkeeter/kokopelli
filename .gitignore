@@ -1,1 +1,9 @@
 *.pyc
+*.DS_Store
+
+libfab/libfab.dylib
+libfab/libfab.so
+build/*
+
+util/doxygen/*/html/*
+util/doxygen/*/latex/*
