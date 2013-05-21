@@ -102,23 +102,23 @@ class RenderTask(object):
             wx.CallAfter(shaded.Enable, False)
             wx.CallAfter(dual.Enable,   False)
 
-        if self.cad.render_mode == 'shaded' and not shaded.IsChecked():
-            render_mode = 'shaded'
+        if self.cad.render_mode == '3D' and not shaded.IsChecked():
+            render_mode = '3D'
             wx.CallAfter(shaded.Check, True)
             wx.CallAfter(koko.APP.render_mode, '3D')
-        elif self.cad.render_mode == 'height' and not height.IsChecked():
-            render_mode = 'height'
+        elif self.cad.render_mode == '2D' and not height.IsChecked():
+            render_mode = '2D'
             wx.CallAfter(height.Check,True)
             wx.CallAfter(koko.APP.render_mode, '2D')
         elif shaded.IsChecked():
-            render_mode = 'shaded'
+            render_mode = '3D'
         elif height.IsChecked():
-            render_mode = 'height'
+            render_mode = '2D'
         else:
-            render_mode = ('shaded','height')
+            render_mode = ('3D','2D')
 
         # Render and load a height-map image
-        if 'height' in render_mode:
+        if '2D' in render_mode:
 
             imgs = self.make_images()
             if self.event.is_set(): return
@@ -128,7 +128,7 @@ class RenderTask(object):
 
 
         # Render and load a triangulated mesh
-        if make_mesh and 'shaded' in render_mode:
+        if make_mesh and '3D' in render_mode:
             koko.GLCANVAS.loaded = False
 
             images = []
