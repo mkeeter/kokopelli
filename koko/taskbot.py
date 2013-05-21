@@ -172,13 +172,10 @@ class TaskBot(object):
 
         if worst is not None:
             mesh = [d for d in collapsible if collapsible[d] == worst][0]
-            print "Collapsing mesh",mesh,"with score",worst
             self.refine_task = CollapseTask(mesh)
         elif best is not None:
             mesh = [d for d in expandable if expandable[d] == best][0]
-            print "Refining mesh",mesh,"with score",best
             self.refine_task = RefineTask(mesh)
-
         else:
             koko.FRAME.status = ''
             koko.GLCANVAS.LOD_complete = True
