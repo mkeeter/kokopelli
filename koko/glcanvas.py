@@ -390,10 +390,12 @@ class GLCanvas(glcanvas.GLCanvas):
         L = (min_corner - center).length()
         scale = 4/L
 
+        self.reload_vbos(meshes)
+
         wx.CallAfter(self._load_meshes, meshes, scale, center)
 
     def _load_meshes(self, meshes, scale, center):
-        self.meshes     = meshes
+        self.meshes = meshes
         self._scale = scale
         self._center = center
 
@@ -406,14 +408,16 @@ class GLCanvas(glcanvas.GLCanvas):
 
 ################################################################################
 
-    def reload_vbos(self):
+    def reload_vbos(self, meshes=None):
         mesh_vbos = []
 
         # Each mesh gets its own VBO.
         # Each leaf gets its own unique color within the mesh VBO
 
         all_leafs = []
-        for m in self.meshes:
+        if meshes is None:  meshes = self.meshes
+
+        for m in meshes:
             leafs = m.leafs()
             all_leafs += leafs
             merged = Mesh.merge(leafs)
