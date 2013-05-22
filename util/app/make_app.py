@@ -42,6 +42,25 @@ except OSError: pass
 shutil.copy('../../kokopelli','kokopelli.py')
 shutil.copytree('../../koko','koko')
 
+# Modify a line in __init__.py to store current hash
+git_hash = subprocess.check_output(
+    "git log --pretty=format:'%h' -n 1".split(' '))[1:-1]
+
+if 'working directory clean' not in subprocess.check_output(['git','status']):
+    git_hash += '+'
+
+with open('koko/__init__.py', 'r') as f:
+    lines = f.readlines()
+
+with open('koko/__init__.py', 'w') as f:
+    for L in lines:
+        if 'HASH = None' in L:
+            f.write("HASH = '%s'\n" % git_hash)
+        else:
+            f.write(L)
+
+
+# Setup details for py2app
 APP = ['kokopelli.py']
 DATA_FILES = glob.glob('../../koko/lib/*.py')
 
@@ -72,7 +91,7 @@ shutil.rmtree('dist')
 
 subprocess.call('zip -r kokopelli README kokopelli.app'.split(' '))
 
-if 'mkeeter' in subprocess.check_output('whoami'):
+if 'mkeeter' in subprocess.check_output('whoami') and git_hash[-1] != '+':
     subprocess.call(
         'scp kokopelli.zip root@tmp.cba.mit.edu:/web/mkeeter'.split(' ')
     )

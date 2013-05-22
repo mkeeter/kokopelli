@@ -2,7 +2,7 @@
 
 NAME = 'kokopelli'
 VERSION = '0.2'
-CHANGESET = None
+HASH = None
 
 """
 @namespace koko

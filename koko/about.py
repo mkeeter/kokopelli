@@ -1,4 +1,4 @@
-from koko import NAME, VERSION, CHANGESET
+from koko import NAME, VERSION, HASH
 
 import wx
 
@@ -9,12 +9,12 @@ def show_about_box(event=None):
     info.SetName(NAME)
     info.SetVersion(VERSION)
 
-    if CHANGESET is None:
+    if HASH is None:
         info.SetDescription('An interactive design tool for .cad files.')
     else:
         info.SetDescription(
-            'An interactive design tool for .cad files.\nhg revision: ' +
-            CHANGESET
+            'An interactive design tool for .cad files.\ngit commit: ' +
+            HASH
         )
 
     info.SetWebSite('http://kokompe.cba.mit.edu')
