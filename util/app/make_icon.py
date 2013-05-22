@@ -23,7 +23,7 @@ def gen(side, indent=4):
             side/20, side - side/20, side/40, side/50
         )
     )
-    
+
     progress(1,10,indent)
     convert(black + """
         -fill white -draw "roundrectangle {0},{0} {1},{1} {2},{2}" mask.png
@@ -51,6 +51,10 @@ def gen(side, indent=4):
     convert('''
         gradient.png +clone -compose CopyOpacity -composite gradient.png
     ''')
+    convert('''
+        gradient.png -fill "rgb(88,110,117)" -colorize 100%
+        -compose CopyOpacity gradient.png -composite gradient.png
+    ''')
 
     progress(5,10,indent)
     convert(black + '''
@@ -74,21 +78,19 @@ def gen(side, indent=4):
 
     progress(7,10,indent)
     convert(blank + """
-        -fill "rgb(110,120,125)" -draw "roundrectangle {0},{0} {1},{1} {2},{2}"
+        -fill "rgb(0,43,54)" -draw "roundrectangle {0},{0} {1},{1} {2},{2}"
         base.png""".format(
             side/20, side - side/20, side/40
         )
     )
 
-    progress(8,10,indent)
-    convert('''shadow.png base.png -composite text.png -composite icon.png''')
-
-
     progress(9,10,indent)
     convert('''
-        gradient.png icon.png -compose blend
-        -define compose:args=100,20 -composite icon.png
+        base.png gradient.png -composite base.png
     ''')
+
+    progress(8,10,indent)
+    convert('''shadow.png base.png -composite text.png -composite icon.png''')
 
     progress(10,10,indent)
     shutil.copy('icon.png', 'icon%i.png' % side)
@@ -107,6 +109,6 @@ if len(sys.argv) < 2:
         ['icon%i.png' % i for i in sizes[::-1]]
     )
     subprocess.call(['rm'] + ['icon%i.png' % i for i in sizes])
-    
+
 else:
     gen(int(sys.argv[1]), indent=0)
