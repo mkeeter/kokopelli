@@ -59,6 +59,8 @@ setup(
 # Copy libtree
 shutil.copy('../../libfab/libfab.dylib',
             'dist/kokopelli.app/Contents/Frameworks/libfab.dylib')
+shutil.copytree('/Library/Frameworks/libpng.framework',
+            'dist/kokopelli.app/Contents/Frameworks/libpng.framework')
 
 # Copy the readme and examples into the distribution directory, then zip it up
 shutil.rmtree('build')
@@ -69,3 +71,8 @@ shutil.move('dist/kokopelli.app', '.')
 shutil.rmtree('dist')
 
 subprocess.call('zip -r kokopelli README kokopelli.app'.split(' '))
+
+if 'mkeeter' in subprocess.check_output('whoami'):
+    subprocess.call(
+        'scp kokopelli.zip root@tmp.cba.mit.edu:/web/mkeeter'.split(' ')
+    )
