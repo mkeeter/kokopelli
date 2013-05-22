@@ -230,7 +230,6 @@ class MainFrame(wx.Frame):
         attach(export, 'Show CAM panel', self.show_cam, 'Ctrl+M', '',
                attach_function=export.AppendCheckItem)
 
-        if koko.BUNDLED:    fab.Enable(False)
         menu_bar.Append(export, 'Export')
 
         libraries = wx.Menu()
