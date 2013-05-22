@@ -44,11 +44,31 @@ class Mesh(object):
             libfab.free_mesh(self.ptr)
 
     @property
-    def X(self):    return self.ptr.contents.X if self.ptr else None
+    def X(self):
+        if self.ptr:    return self.ptr.contents.X
+        else:
+            return Interval(
+                min(c.X.lower for c in self.children),
+                max(c.X.upper for c in self.children)
+            )
+
     @property
-    def Y(self):    return self.ptr.contents.Y if self.ptr else None
+    def Y(self):
+        if self.ptr:    return self.ptr.contents.Y
+        else:
+            return Interval(
+                min(c.Y.lower for c in self.children),
+                max(c.Y.upper for c in self.children)
+            )
+
     @property
-    def Z(self):    return self.ptr.contents.Z if self.ptr else None
+    def Z(self):
+        if self.ptr:    return self.ptr.contents.Z
+        else:
+            return Interval(
+                min(c.Z.lower for c in self.children),
+                max(c.Z.upper for c in self.children)
+            )
 
     @property
     def tcount(self):   return self.ptr.contents.tcount if self.ptr else None
@@ -257,6 +277,7 @@ class Mesh(object):
 from    koko.c.libfab   import libfab
 from    koko.c.region   import Region
 from    koko.c.mesh     import Mesh as _Mesh
+from    koko.c.interval import Interval
 
 from    koko.fab.tree   import MathTree
 from    koko.fab.asdf   import ASDF
