@@ -1,5 +1,5 @@
-
 import threading
+from thread import LockType
 
 def __monitor(interrupt, halt):
     """ @brief Waits for interrupt, then sets halt to 1
@@ -63,3 +63,18 @@ def monothread(target, args, interrupt=None, halt=None):
         interrupt.clear()
 
     return result
+
+def threadsafe(f):
+    ''' A decorator that locks the arguments to a function,
+        invokes the function, then unlocks the arguments and
+        returns.'''
+    def wrapped(*args, **kwargs):
+        for a in set(list(args) + kwargs.values()):
+            if hasattr(a, 'lock') and LockType and isinstance(a.lock, LockType):
+                a.lock.acquire()
+        result = f(*args, **kwargs)
+        for a in set(list(args) + kwargs.values()):
+            if hasattr(a, 'lock') and LockType and isinstance(a.lock, LockType):
+                a.lock.release()
+        return result
+    return wrapped

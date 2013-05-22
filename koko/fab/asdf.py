@@ -7,7 +7,7 @@ from math           import sin, cos, radians, log, ceil
 import os
 import Queue
 
-from koko.c.multithread    import multithread, monothread
+from koko.c.multithread    import multithread, monothread, threadsafe
 
 from koko.struct    import Struct
 from koko.c.libfab  import libfab
@@ -45,12 +45,26 @@ class ASDF(object):
         # Filename if ASDF was loaded from a file
         self.filename   = None
 
+        ## @var _lock
+        # Lock for safe multithreaded operations
+        self.lock = threading.Lock()
 
+    @threadsafe
     def __del__(self):
         """ @brief ASDF destructor which frees ASDF is necessary
         """
         if self.free and libfab is not None:
             libfab.free_asdf(self.ptr)
+
+    def lock(self):
+        """ @brief Locks the ASDF to prevent interference from other threads
+        """
+        self._lock.acquire()
+
+    def unlock(self):
+        """ @brief Unlocks the ASDF
+        """
+        self._lock.release()
 
     def interpolate(self, x, y, z):
         """ @brief Interpolates based on ASDF corners
@@ -238,6 +252,7 @@ class ASDF(object):
         """
         return ASDF(libfab.asdf_slice(self.ptr, z), color=self.color)
 
+
     def bounds(self, alpha=0, beta=0):
         ''' Find the largest possible bounding box for this ASDF
             rotated with angles alpha and beta. '''
@@ -362,6 +377,7 @@ class ASDF(object):
     #
     #   Triangulation functions
     #
+    @threadsafe
     def triangulate(self, threads=True, interrupt=None):
         """ @brief Triangulates an ASDF, returning a mesh
             @param threads Boolean determining multithreading
@@ -404,9 +420,13 @@ class ASDF(object):
         if queue:   queue.put(mesh)
         else:       return mesh
 
+
+    @threadsafe
     def triangulate_cms(self):
         return Mesh(libfab.triangulate_cms(self.ptr))
 
+
+    @threadsafe
     def contour(self, interrupt=None):
         """ @brief Contours an ASDF
             @returns A set of Path objects

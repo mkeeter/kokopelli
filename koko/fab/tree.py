@@ -9,24 +9,9 @@ import  Queue
 from    koko.c.libfab       import libfab
 from    koko.c.interval     import Interval
 from    koko.c.region       import Region
-from    koko.c.multithread  import multithread
+from    koko.c.multithread  import multithread, threadsafe
 
 ################################################################################
-
-def threadsafe(f):
-    ''' A decorator that locks the arguments to a function,
-        invokes the function, then unlocks the arguments and
-        returns.'''
-    def wrapped(*args, **kwargs):
-        for a in set(list(args) + kwargs.values()):
-            if isinstance(a, MathTree):
-                a.lock()
-        result = f(*args, **kwargs)
-        for a in set(list(args) + kwargs.values()):
-            if isinstance(a, MathTree):
-                a.unlock()
-        return result
-    return wrapped
 
 def forcetree(f):
     ''' A decorator that forces function arguments to be
@@ -84,28 +69,20 @@ class MathTree(object):
         # Assigned color, or None
         self.color  = color
 
+        self._str   = None
         self._ptr    = None
 
         ## @var bounds
         # X, Y, Z bounds (or None)
         self.bounds  = [None]*6
 
-        self._str   = None
-        self._lock  = threading.Lock()
+        self.lock  = threading.Lock()
 
+    @threadsafe
     def __del__(self):
         """ @brief MathTree destructor """
         if self._ptr is not None and libfab is not None:
             libfab.free_tree(self.ptr)
-
-    def lock(self):
-        """ @brief Locks the MathTree to prevent interference from other threads
-        """
-        self._lock.acquire()
-    def unlock(self):
-        """ @brief Unlocks the MathTree
-        """
-        self._lock.release()
 
     @property
     def ptr(self):
