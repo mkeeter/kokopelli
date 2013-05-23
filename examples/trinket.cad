@@ -1,0 +1,60 @@
+"""
+examples/trinket.cad
+
+This is a model for a four-piece press-fit trinket.
+It is designed for fabrication on a water-jet cutter;
+the kerf of the tool is parameterized below.
+
+When the variable 'mode' is changed, it switches between
+a cut sheet and a solid model.
+
+Notice that the design sets cad.render_mode, overriding
+the display settings.
+"""
+
+from koko.lib.shapes import *
+
+## Comment out one or the other to switch mode
+#mode = 'cut sheet'
+mode = 'model'
+
+# System parameters
+R = 0.25        # sphere radius
+T = 0.125       # material thickness
+kerf = 0.015    # cutting tool's kerf (radius)
+
+
+A = circle(0, 0, R) - circle(0, 0, R/2)
+B = C = A
+
+inner_slot = (rectangle(-T/2, T/2, 0, 0.75*R) +
+              circle(-T/2, 0.75*R-kerf, kerf)  +
+              circle(T/2, 0.75*R-kerf, kerf))
+outer_slot = (rectangle(-T/2, T/2, 0.75*R, R) + 
+              circle(-T/2, 0.75*R+kerf, kerf) + 
+              circle(T/2, 0.75*R+kerf, kerf))
+
+A -= inner_slot
+A -= rectangle(-T/2, T/2, -R, 0)
+A.color = 'red'
+
+B -= rotate(inner_slot, 90) + rotate(inner_slot, -90)
+B -= outer_slot
+B.color = 'blue'
+
+C -= rectangle(-T/2, T/2, -R, R)
+C -= rotate(outer_slot, 90) + rotate(outer_slot, -90)
+C.color = 'green'
+
+if mode == 'model':
+    A = extrusion(A, -T/2, T/2)
+    B = rotate_y(extrusion(B, -T/2, T/2), 90)
+    C = rotate_z(rotate_y(extrusion(C, -T/2, T/2), 90), 90)
+
+    cad.render_mode = '3D'
+    cad.shapes = A, B, C
+elif mode == 'cut sheet':
+    cad.render_mode = '2D'
+    cad.shapes = A, move(B, 2.5*R, 0), move(C, 5*R, 0)
+else:
+    print "Invalid mode."

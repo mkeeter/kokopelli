@@ -1,0 +1,56 @@
+"""
+examples/text.cad
+
+This example shows the use of the koko.lib.text library.
+
+It also indirectly shows a few data attributes of MathTree
+shapes: the staff is position with reference to x and y bounds
+of the text block.
+"""
+
+
+from koko.lib.text import *
+from koko.lib.shapes2d import *
+
+txt = '''                   But this rough magic
+I here abjure, and, when I have required
+Some heavenly music, which even now I do,
+To work mine end upon their senses that
+This airy charm is for, I'll break my staff,
+Bury it certain fathoms in the earth,
+And deeper than did ever plummet sound
+I'll drown my book.
+'''     # -- Prospero (The Tempest, 5.I)
+
+
+# The first character in 'align' determines horizontal alignment.
+# Valid values are and can be L, R, or C (left, right, or centered).
+# The second character determines vertical alignment.
+# Valid values are T, C, or B (top, center, or bottom)
+txt = text(txt, 0, 0, align='LC')
+
+# Make a decorative wizard's staff
+edge = triangle(-0.1, 0, 0, 0, -0.05, -0.1)
+edge += move(edge, 0.1, 0)
+top = (
+    rectangle(-0.1, 0.1, 0, 2) + edge +
+    circle(0, 2, 0.2) - rectangle(-1, 1, 2, 2.5) -
+    circle(0, 2, 0.15)
+)
+bottom = rectangle(-0.1, 0.1, -2, 0) - edge
+top, bottom = map(
+    lambda t: taper_x_y(t, 0, -2, 2, 0.3, 1), [top, bottom]
+)
+crystal = circle(0, 0, 0.12)
+r = scale_y(rotate(rectangle(-0.02, 0.02, -0.02, 0.02), 45), 0, 3)
+for i in range(8):
+    crystal -= rotate(r, i*360/8)
+top += move(crystal, 0, 2)
+
+# Position and scale the wizard's staff
+staff = scale_xy(
+    rotate(top + rotate(move(bottom, 0, -0.1), -10), 95),
+    0, 0, 5)
+staff = move(staff, (txt.xmin+txt.xmax)/2, txt.ymin - 1)
+
+cad.shapes = txt, staff

@@ -1,0 +1,344 @@
+"""
+examples/mtm_az.cad
+
+This example implements Jonathan Ward's MTM AZ PCB mill,
+documented online at http://mtm.cba.mit.edu/machines/mtm_az/
+
+It was written in the final days of my thesis to test render
+times of many-part models.  As such, it is not well-commented.
+"""
+
+from math import sqrt
+
+from koko.lib.shapes import *
+
+#cad.render_mode = 'shaded'
+cad.mm_per_unit = 25.4
+
+L = 10.     # Length of base
+W = 10.     # Width of base
+H = 8.      # Height
+T = 0.5     # Material thickness
+D = 1       # Inset of cutouts
+MH = 2.5      # Motor panel height
+MR = 0.75      # Motor cutout radius
+RR = 0.18   # Sliding rod radius
+RS = 2.5      # Sliding rod spacing
+
+WH = 4.75    # Working height
+WW = 4.0    # Working area width
+WG = 0.2    # Gap between work area and bottom
+
+ZMR = 0.2   # Z axis motor radius
+ZRS = 2     # Z axis rod spacing
+ZRR = 0.125 # Z rod radius
+SW  = 2.75      # Spindle width
+SL  = 1.4      # Spindle length
+
+SMR = 0.3  # Spindle motor radius
+
+
+################################################################################
+
+# Base
+
+_A_ = (
+    rounded_rectangle(-L/2, L/2, -W/2, W/2, 0.1) -
+    rounded_rectangle(-L/4, L/4, -0.1875*W, 0.1875*W, 0.1)
+)
+wall2_y = W/2 - D - T*1.5
+_A_ = (
+    extrusion(_A_, -T/2, T/2) -
+    cube(-L/2 + D, -L/2 + D + T, -W/2 + D, W/2 - D, 0, T/2) -
+    cube(L/2 - D - T, L/2 - D, -W/2 + D, W/2 - D, 0, T/2) -
+    cube(-L/2 + D, L/2 - D, wall2_y - T/2, wall2_y + T/2, 0, T/2) -
+    cube(-L/2 + D, L/2 - D, -wall2_y - T/2, -wall2_y + T/2, 0, T/2) -
+    cube(-L/2, -L/2+D+T, -RS/2, RS/2, 0, T/2) -
+    cube(L/2-D-T, L/2, -RS/2, RS/2, 0, T/2)
+)
+
+
+################################################################################
+
+# First set of walls
+xrod_y = MH/2 + T/2
+_H_ = (
+    rectangle(0, H*0.9, -W/2+D, W/2-D) +
+    rectangle(0, H, -W/2+D+H*0.1, W/2-D-H*0.1) +
+    circle(H*0.9, -W/2+D+H*0.1, H*0.1) +
+    circle(H*0.9, W/2-D-H*0.1, H*0.1) -
+    rounded_rectangle(MH+T/2, H - D, -0.1875*W-D, 0.1875*W+D, 0.05) -
+    circle(xrod_y, RS/2, RR) -
+    circle(xrod_y, -RS/2, RR)
+)
+_G_ = _H_ - circle(xrod_y, 0, RR)
+
+_H_ = _H_ - circle(xrod_y, 0, MR)
+_H_ = (
+    extrusion(_H_, -T/2, T/2) -
+    cube(0, H, wall2_y - T/2, wall2_y + T/2, -T/2, 0) -
+    cube(0, H, -wall2_y - T/2, -wall2_y + T/2, -T/2, 0)
+)
+_H_ = move(rotate_y(_H_, 90), -L/2 + D + T/2, 0, 0)
+
+_G_ = (
+    extrusion(_G_, -T/2, T/2) -
+    cube(0, H, -wall2_y - T/2, -wall2_y + T/2, 0, T/2) -
+    cube(0, H, wall2_y - T/2, wall2_y + T/2, 0, T/2)
+)
+_G_ = move(rotate_y(_G_, 90), L/2 - D - T/2, 0, 0)
+
+################################################################################
+
+# Second set of walls
+
+_I_ = (
+    rectangle(-L/2+D+T/2, L/2-D-T/2, 0, H) -
+    rounded_rectangle(
+        -L/2+D+T/2+D, L/2-D-T-MH, MH+T/2, H-D, 0.05
+    ) -
+    circle(L/2-D-T-MH/2, H-RS/2, RR) -
+    circle(L/2-D-T-MH/2, H-RS*1.5, RR)
+)
+yrod_x = L/2-D-T-MH/2
+yrod_z = H - RS
+
+_J_ = _I_ - circle(yrod_x, yrod_z, MR)
+_I_ = _I_ - circle(yrod_x, yrod_z, RR)
+_I_ = extrusion(_I_, -T/2, T/2)
+_I_ = move(rotate_x(_I_, 90), 0, -wall2_y)
+
+
+_J_ = extrusion(_J_, -T/2, T/2)
+_J_ = move(rotate_x(_J_, 90), 0, wall2_y)
+
+################################################################################
+
+# Back panels for rods
+_Y_ = (
+    rectangle(0, MH + T/2, -RS/2, RS/2) +
+    (
+        circle(MH/2 + T/2, 0, MH/1.41) &
+        rectangle(T/2, MH+T/2, -MH/sqrt(2), MH/sqrt(2))
+    )
+)
+_V_ = _Y_
+_Y_ -= circle(MH/2+T/2, 0, MR)
+_Y_ = extrusion(_Y_, -T/2, T/2)
+_Y_ = move(rotate_y(_Y_, 90),  -L/2 + D - T/2, 0)
+
+_V_ = extrusion(_V_, -T/2, T/2)
+_V_ = move(rotate_y(_V_, 90), L/2-D+T/2, 0)
+
+_W_ = rectangle(-MH/2, MH/2, 0, H, )
+_X_ = _W_ - circle(0, H-RS, MR)
+
+_W_ = extrusion(_W_, -T/2, T/2)
+_W_ = move(
+    rotate_x(_W_, 90),
+    L/2-D-T-MH/2,
+    -wall2_y - T
+)
+
+_X_ = extrusion(_X_, -T/2, T/2)
+_X_ = move(
+    rotate_x(_X_, 90),
+    yrod_x,
+    wall2_y+T
+)
+
+################################################################################
+
+# Assembling base and adding rods
+
+rod = cylinder(0,0,-L/2+D, L/2-D, RR)
+rod = rotate_y(rod, 90)
+rods = [
+    move(rod, 0, -RS/2, xrod_y),
+    move(rod, 0, RS/2, xrod_y)
+]
+
+rod = cylinder(0, 0, -wall2_y-T/2, wall2_y+T/2, RR)
+rod = rotate_x(rod, 90)
+rods += [
+    move(rod, yrod_x, 0, H-RS/2),
+    move(rod, yrod_x, 0, H-3*RS/2),
+]
+for r in rods:
+    r.color = (130, 130, 130)
+
+body = [_A_, _G_, _H_, _I_, _J_, _Y_, _V_, _W_, _X_] + rods
+    
+motor_x = cube(-L/2+D-T-2, -L/2+D-T, -1, 1, T/2 + MH/2 - 1, T/2 + MH/2 + 1)
+motor_x.color = (20, 20, 20)
+
+motor_y = cube(yrod_x-1, yrod_x+1, wall2_y + T/2, wall2_y+T/2+2, yrod_z-1, yrod_z+1)
+motor_y.color = (20, 20, 20)
+
+body += [motor_x, motor_y]
+################################################################################
+
+# Working table
+
+_C_ = (
+    rectangle(0, MH-WG-T, -WH/2+T/2, WH/2-T/2) -
+    circle((MH-WG-T)/2, RS/2, RR) -
+    circle((MH-WG-T)/2, -RS/2, RR) -
+    circle((MH-WG-T)/2, 0, RR)
+)
+_C_ = extrusion(_C_, -T/2, T/2)
+_E_ = move(rotate_y(_C_, 90), WW/2-T/2, 0, T + WG/2)
+_C_ = move(rotate_y(_C_, 90), -WW/2+T/2, 0, T + WG/2)
+
+_B_ = (
+    cube(-WW/2, WW/2, -WH/2, WH/2, 0, T/2) +
+    cube(-WW/2+T, WW/2-T, -WH/2+T, WH/2-T, -T/2, T/2)
+)
+_B_ = move(_B_, 0, 0, MH - WG/2)
+
+_D_ = (
+    cube(-WW/2, WW/2, 0, MH-WG-T, -T/2, 0) +
+    cube(-WW/2 + T, WW/2 - T, 0, MH - WG - T, -T/2, T/2)
+)
+
+_D_ = move(rotate_x(_D_, 90), 0, WH/2-T/2,  T + WG/2)
+
+_F_ = (
+    cube(-WW/2, WW/2, 0, MH-WG-T, 0, T/2) +
+    cube(-WW/2 + T, WW/2 - T, 0, MH - WG - T, -T/2, T/2)
+)
+_F_ = move(rotate_x(_F_, 90), 0, T/2-WH/2,  T + WG/2)
+
+################################################################################
+
+# Spindle base
+p = 0.7
+spindle_h = RS+T*3  # Spindle height
+
+_M_ = (
+    rectangle(-MH*p/2, MH*p/2, -SW/2, SW/2) +
+    rounded_rectangle(-MH*p/2 - SL, MH*p/2, -SW/2, SW/2, 0.2) -
+    circle(-MH*p/2-SL/2, -ZRS/2, ZRR) -
+    circle(-MH*p/2-SL/2, ZRS/2, ZRR)
+)
+_M_ = (
+    extrusion(_M_, -T/2, T/2) -
+    cube(-MH*p/2, MH*p/2, -SW/2, -SW/2+T, -T/2, 0) -
+    cube(-MH*p/2, MH*p/2, SW/2-T, SW/2, -T/2, 0) -
+    cube(-MH*p/2, -MH*p/2+T, -SW/2, SW/2, -T/2, 0)
+)
+_N_ = move(reflect_z(_M_), 0, 0, -spindle_h/2)
+_M_ -= circle(-MH*p/2-SL/2, 0, ZMR)
+_M_ = move(_M_, 0, 0, spindle_h/2)
+
+
+_K_ = (
+    rectangle(-MH*p/2, MH*p/2, -spindle_h/2, spindle_h/2) -
+    circle(0, 0, RR) -
+    circle(0, RS/2, RR) -
+    circle(0, -RS/2, RR)
+)
+_K_ = extrusion(_K_, -T/2, T/2)
+_L_ = move(rotate_x(_K_, 90), 0, -SW/2+T/2)
+_K_ = move(rotate_x(_K_, 90), 0, SW/2-T/2)
+_O_ = cube(
+    -MH*p/2, -MH*p/2 + T,
+    -SW/2+T, SW/2-T,
+    -spindle_h/2, spindle_h/2
+)
+
+z_motor = cube(
+    -MH*p/2-SL/2-0.6, -MH*p/2-SL/2+0.6,
+    -0.6, 0.6,
+    spindle_h/2 + T/2, spindle_h/2+ T/2 + 1.2
+)
+z_motor.color = (30,30,30)
+
+spindle_base = [_M_,_N_,_K_,_L_,_O_, z_motor]
+
+
+################################################################################
+
+# Adding rods and combining into spindle base
+
+rods = [
+    cylinder(
+        -MH*p/2-SL/2, -ZRS/2, -spindle_h/2-T/2, spindle_h/2+T/2, ZRR
+    ),
+    cylinder(
+        -MH*p/2-SL/2, ZRS/2, -spindle_h/2-T/2, spindle_h/2+T/2, ZRR
+    ),
+]
+for r in rods:
+    r.color = (120, 120, 120)
+spindle_base += rods
+
+
+################################################################################
+
+# Actual spindle
+
+_P_ = (
+    rectangle(-SL/2, SL/2, -SW/2, SW/2) +
+    rounded_rectangle(-SL/2 - SMR*4, SL/2, -SW/2, SW/2, 0.2) -
+    circle(0, ZRS/2, ZRR) -
+    circle(0, -ZRS/2, ZRR) -
+    circle(0, 0, ZRR) -
+    circle(-SL/2-SMR*2, 0, SMR)
+)
+_P_ = (
+    extrusion(_P_, -T/2, T/2) - 
+    cube(-SL/2, -SL/2+T, -SW/2, SW/2, -T/2, 0) -
+    cube(SL/2-T, SL/2, -SW/2, SW/2, -T/2, 0)
+)
+_Q_ = reflect_z(_P_)
+
+_P_ = move(_P_, 0,0, spindle_h/8)
+_Q_ = move(_Q_, 0, 0, -spindle_h/8)
+
+_R_ = cube(-SL/2, -SL/2+T, -SW/2, SW/2, -spindle_h/8, spindle_h/8)
+_S_ = cube(SL/2-T, SL/2, -SW/2, SW/2, -spindle_h/8, spindle_h/8)
+
+_U_ = rounded_rectangle(-SL/2 - SMR*4, -SL/2, -SW/2, SW/2,0.4)
+_T_ = _U_
+_U_ -= rounded_rectangle(-SL/2 - SMR*3, 0, -SW/3, SW/3, 0.4)
+_T_ -= circle(-SL/2 - SMR*2, 0, SMR/2)
+_U_ = extrusion(_U_, spindle_h/8+T/2, spindle_h/8+3*T/2)
+_T_ = extrusion(_T_, spindle_h/8+3*T/2, spindle_h/8+5*T/2)
+
+spindle_motor = (
+    cylinder(
+        -SL/2 - SMR*2, 0,
+        spindle_h/8+5*T/2, spindle_h/8+5*T/2+1, 0.4
+    ) +
+    cylinder(
+        -SL/2 - SMR*2, 0,
+        -spindle_h/1.5, spindle_h/8+5*T/2+1, 0.05
+    )
+)
+spindle_motor.color = (100, 100, 110)
+spindle = [_P_, _Q_, _R_, _S_,_U_,_T_, spindle_motor]
+
+################################################################################
+
+# Move spindle pieces so that they line up with the base
+spindle = spindle_base + map(
+    lambda part: move(part, -MH*p/2-SL/2, 0), spindle
+)
+
+# Move the entire spindle contraption so that it lines up
+# with the y axis rods
+platform = [_B_,_C_,_D_,_E_,_F_]
+spindle = map(lambda p: move(p, yrod_x, 0, yrod_z), spindle)
+
+cad.shapes = body + platform + spindle
+
+from random import random, seed
+seed('mtm a-z')
+for c in cad.shapes:
+    if not c.color:
+        c.color = (
+            220 + (random() - 0.5) * 20,
+            153 + (random() - 0.5) * 20,
+            127 + (random() - 0.5) * 20
+        )
