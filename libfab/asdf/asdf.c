@@ -155,7 +155,10 @@ ASDF* build_asdf(
             enable_nodes(tree);
         #endif
 
-        if (*halt)  return asdf;
+        if (*halt) {
+            free_asdf(asdf);
+            return NULL;
+        }
 
         // Pull d values from children
         get_d_from_children(asdf);
@@ -419,7 +422,7 @@ int can_merge(const ASDF* const asdf, const uint8_t axis)
 
 void simplify(ASDF* const asdf, const _Bool merge_leafs)
 {
-    if (asdf->state != BRANCH)  return;
+    if (!asdf || asdf->state != BRANCH)  return;
 
     // Arrange the axes so that the largest axis is (potentially) merged first
     int axes[3];

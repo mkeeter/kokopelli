@@ -676,6 +676,7 @@ class MathTree(object):
 
         # Generate a root for the tree
         asdf = ASDF(libfab.asdf_root(packed[0], region), color=self.color)
+        asdf.lock.acquire()
 
         # Multithread the solver process
         q = Queue.Queue()
@@ -694,9 +695,17 @@ class MathTree(object):
         for s in subregions:
             try:                id, branch = q.get_nowait()
             except Queue.Empty: break
-            else:               asdf.ptr.contents.branches[id] = branch
+            else:
+                # Make sure we didn't get a NULL pointer back
+                # (which could occur if the halt flag was raised)
+                try: branch.contents
+                except ValueError:
+                    asdf.lock.release()
+                    return None
+                asdf.ptr.contents.branches[id] = branch
         libfab.get_d_from_children(asdf.ptr)
         libfab.simplify(asdf.ptr, merge_leafs)
+        asdf.lock.release()
 
         # Set a scale on the ASDF if one was provided
         if mm_per_unit is not None:     asdf.rescale(mm_per_unit)
