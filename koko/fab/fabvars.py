@@ -8,9 +8,9 @@ from koko.fab.tree      import MathTree
 class FabVars(object):
     ''' Container class to hold CAD state and settings.'''
     def __init__(self):
-        self.shapes      = None
+        self._shapes     = []
+        self._shape      = None
         self.render_mode = None
-        self.voxel_res   = None
         self.mm_per_unit = 25.4
         self.border      = 0.05
 
@@ -18,17 +18,26 @@ class FabVars(object):
     def shapes(self):   return self._shapes
     @shapes.setter
     def shapes(self, value):
-        if value is None:
-            self._shapes = value
-        elif type(value) in (list, tuple):
-            for v in value:
-                if type(v) is not MathTree:
-                    raise TypeError(
-                        'cad.shapes must be of type MathTree, not %s.'
-                        % type(v))
-            self._shapes = list(value)
-        else:
-            self._shapes = [MathTree.wrap(value)]
+        if type(value) not in (list, tuple):
+            raise TypeError('cad.shapes must be a list or tuple of MathTree objects')
+        value = map(MathTree.wrap, value)
+        self._shapes = list(value)
+        self._shape = reduce(operator.add,
+            [color(s, None) for s in self.shapes]
+        )
+
+    @property
+    def shape(self):    return self._shape
+    @shape.setter
+    def shape(self, value): self.shapes = [MathTree.wrap(value)]
+
+
+    @property
+    def function(self):
+        raise TypeError('cad.function is deprecated in favor of cad.shape(s)')
+    @function.setter
+    def function(self, value):
+        raise TypeError('cad.function is deprecated in favor of cad.shape(s)')
 
     @property
     def render_mode(self):
@@ -49,18 +58,7 @@ class FabVars(object):
         except TypeError:
             raise TypeError("mm_per_unit should be a number.")
 
-    @property
-    def function(self):
-        if len(self.shapes) > 1:
-            return reduce(operator.add,
-                [color(s, None) for s in self.shapes])
-        elif self.shapes:
-            return self.shapes[0]
-        else:
-            return None
-    @function.setter
-    def function(self, value):
-        self.shapes = value
+
 
     @property
     def xmin(self):
@@ -124,27 +122,3 @@ class FabVars(object):
         return all(getattr(self, b) is not None for b in
                     ['xmin','xmax','ymin','ymax','zmin','zmax'])
 
-
-    def write(self, filename):
-        ''' Saves to a .math file.
-            'filename' should be either a string or an open file handle.'''
-
-
-        text = '''format: Real
-mm per unit: %f
-dx dy dz: %f %f %f
-xmin ymin zmin: %f %f %f
-expression: %s''' %  (
-        self.mm_per_unit,
-        self.dx,   self.dy,   self.dz   if self.dz   else 0,
-        self.xmin, self.ymin, self.zmin if self.zmin else 0,
-        self.function)
-
-        if type(filename) is str:
-            with open(filename,'w') as f:
-                f.write(text)
-        else:
-            filename.seek(0)
-            filename.truncate(0)
-            filename.write(text)
-            filename.flush()

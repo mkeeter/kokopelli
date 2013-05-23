@@ -243,7 +243,7 @@ class RenderTask(object):
             koko.CANVAS.border = (255, 0, 0)
             koko.GLCANVAS.border = (255, 0, 0)
             return
-        elif self.cad.shapes is None:
+        elif self.cad.shapes == []:
             koko.FRAME.status = ('Error:  No shape defined!')
             koko.CANVAS.border = (255, 0, 0)
             koko.GLCANVAS.border = (255, 0, 0)

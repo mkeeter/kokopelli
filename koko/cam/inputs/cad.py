@@ -61,7 +61,7 @@ class CadInputPanel(FabPanel):
         """ @brief Returns a dictionary with the stored cad structure
         """
         koko.FRAME.status = 'Checking cad expression'
-        if not bool(self.cad.function.ptr):
+        if not bool(self.cad.shape.ptr):
             wx.CallAfter(self.label.SetBackgroundColour, '#853535')
             wx.CallAfter(self.label.SetForegroundColour, '#ffffff')
             koko.FRAME.status = 'Error: Failed to parse math expression!'
@@ -116,7 +116,7 @@ class CadImgPanel(FabPanel):
         if not values:  return False
 
         # Render the expression into an image
-        expr = cad.function
+        expr = cad.shape
 
         zmin = expr.zmin if expr.zmin else 0
         zmax = expr.zmax if expr.zmax else 0
@@ -184,7 +184,7 @@ class CadASDFPanel(FabPanel):
         if not values:  return False
 
         # Render the expression into an image
-        expr = cad.function
+        expr = cad.shape
 
         zmin = expr.zmin if expr.zmin else 0
         zmax = expr.zmax if expr.zmax else 0

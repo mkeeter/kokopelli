@@ -90,7 +90,7 @@ class ExportTask(object):
         '''
 
         if self.heightmap:
-            out = self.make_image(self.cad.function)
+            out = self.make_image(self.cad.shape)
         else:
             i = 0
             imgs = []
@@ -133,7 +133,7 @@ class ExportTask(object):
     def export_asdf(self):
         ''' Exports an ASDF file.
         '''
-        asdf = self.make_asdf(self.cad.function)
+        asdf = self.make_asdf(self.cad.shape)
         self.window.progress = 50
         if self.event.is_set(): return
         asdf.save(self.filename)
@@ -238,7 +238,7 @@ class ExportTask(object):
         ''' Saves a math tree as a .dot file. '''
 
         # Make the cad function and C data structure
-        expr = self.cad.function
+        expr = self.cad.shape
         expr.ptr
         self.window.progress = 25
 
