@@ -12,20 +12,21 @@ from koko.lib.shapes2d import *
 
 def text(text, x, y, height = 1, align = 'CC'):
 
-    dx, dy = 0, 0
+    dx, dy = 0, -1
     text_shape = None
 
     for line in text.split('\n'):
         line_shape = None
 
-        for chr in line:
-            if not chr in _glyphs.keys():
-                print 'Warning:  Unknown character "%s" in koko.lib.text' % chr
+        for c in line:
+            if not c in _glyphs.keys():
+                print 'Warning:  Unknown character "%s" in koko.lib.text' % c
             else:
-                chr_math = move(_glyphs[chr], dx, dy)
+                chr_math = move(_glyphs[c], dx, dy)
                 if line_shape is None:  line_shape  = chr_math
                 else:                   line_shape += chr_math
-                dx += _glyphs[chr].width + 0.1
+                dx += _glyphs[c].width + 0.1
+        dx -= 0.1
 
         if line_shape is not None:
             if align[0] == 'L':
@@ -40,14 +41,15 @@ def text(text, x, y, height = 1, align = 'CC'):
         dy -= 1.55
         dx = 0
 
+    dy += 1.55
     if text_shape is None:  return None
 
     if align[1] == 'T':
-        text_shape = move(text_shape, 0, -1)
+        pass
     elif align[1] == 'B':
-        text_shape = move(text_shape, 0, -1.55 - dy,)
+        text_shape = move(text_shape, 0, -dy,)
     elif align[1] == 'C':
-        text_shape = move(text_shape, 0, (-2.55-dy)/2)
+        text_shape = move(text_shape, 0, -dy/2)
 
     if height != 1:
         text_shape = scale_xy(text_shape, 0, 0, height)
