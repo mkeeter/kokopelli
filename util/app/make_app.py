@@ -93,7 +93,7 @@ subprocess.call(
 )
 
 if 'mkeeter' in subprocess.check_output('whoami') and git_hash[-1] != '+':
-    print "Uploading tp tmp.cba.mit.edu (Ctrl+C to cancel)"
+    print "Uploading to tmp.cba.mit.edu (Ctrl+C to cancel)"
     subprocess.call(
         'scp kokopelli.zip root@tmp.cba.mit.edu:/web/mkeeter'.split(' ')
     )
