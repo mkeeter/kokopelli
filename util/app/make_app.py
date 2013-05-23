@@ -41,13 +41,12 @@ except OSError: pass
 # Modify a line in __init__.py to store current hash
 git_hash = subprocess.check_output(
     "git log --pretty=format:'%h' -n 1".split(' '))[1:-1]
+if 'working directory clean' not in subprocess.check_output(['git','status']):
+    git_hash += '+'
 
 # This is the pythons script that we're bundling into an application.
 shutil.copy('../../kokopelli','kokopelli.py')
 shutil.copytree('../../koko','koko')
-
-if 'working directory clean' not in subprocess.check_output(['git','status']):
-    git_hash += '+'
 
 with open('koko/__init__.py', 'r') as f:
     lines = f.readlines()
