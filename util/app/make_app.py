@@ -38,13 +38,13 @@ except OSError: pass
 try:    shutil.rmtree('kokopelli.app')
 except OSError: pass
 
-# This is the pythons script that we're bundling into an application.
-shutil.copy('../../kokopelli','kokopelli.py')
-shutil.copytree('../../koko','koko')
-
 # Modify a line in __init__.py to store current hash
 git_hash = subprocess.check_output(
     "git log --pretty=format:'%h' -n 1".split(' '))[1:-1]
+
+# This is the pythons script that we're bundling into an application.
+shutil.copy('../../kokopelli','kokopelli.py')
+shutil.copytree('../../koko','koko')
 
 if 'working directory clean' not in subprocess.check_output(['git','status']):
     git_hash += '+'
@@ -94,6 +94,7 @@ subprocess.call(
 )
 
 if 'mkeeter' in subprocess.check_output('whoami') and git_hash[-1] != '+':
+    print "Uploading tp tmp.cba.mit.edu (Ctrl+C to cancel)"
     subprocess.call(
         'scp kokopelli.zip root@tmp.cba.mit.edu:/web/mkeeter'.split(' ')
     )
