@@ -17,7 +17,7 @@ def show_about_box(event=None):
             HASH
         )
 
-    info.SetWebSite('http://kokompe.cba.mit.edu')
+    info.SetWebSite('https://github.com/mkeeter/kokopelli')
     info.SetCopyright('(C) 2012-13 MIT Center for Bits and Atoms')
 
     wx.AboutBox(info)
