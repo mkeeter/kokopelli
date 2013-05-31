@@ -67,6 +67,7 @@ ASDF* import_vol_region(
     const int shift, const float offset,
     const _Bool merge_leafs, const _Bool close_border)
 {
+    printf("Importing with close_border = %s\n", close_border ? "True" : "False");
     return _import_vol_region(
         filename, ni, nj, nk, r, r, shift, offset, merge_leafs, close_border
     );
@@ -144,9 +145,10 @@ ASDF* _import_vol_region(
                     if (close_border && (
                             i == full.imin || i == full.imin + full.ni ||
                             j == full.jmin || j == full.jmin + full.nj ||
-                            j == full.jmin || j == full.jmin + full.nj)
+                            k == full.kmin || k == full.kmin + full.nk)
                         )
                     {
+                        printf("!\n");
                         sample = 0;
                     }
 
