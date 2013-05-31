@@ -30,9 +30,9 @@ class Region(ctypes.Structure):
         if depth is not None:
             scale = 3*(2**6)* 2**(depth/3.) / (dx+dy+dz)
 
-        ni = max(int(dx*scale), 1)
-        nj = max(int(dy*scale), 1)
-        nk = max(int(dz*scale), 1)
+        ni = max(int(round(dx*scale)), 1)
+        nj = max(int(round(dy*scale)), 1)
+        nk = max(int(round(dz*scale)), 1)
 
         # Dummy assignments so that Doxygen recognizes these instance variables
         self.ni = self.nj = self.nk = 0

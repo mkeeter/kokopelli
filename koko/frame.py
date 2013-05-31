@@ -19,6 +19,8 @@ print '\r'+' '*80+'\r[||||||||--]    importing koko.editor',
 sys.stdout.flush()
 from    koko.editor    import Editor
 
+from    koko.vol    import ImportPanel
+
 from    koko.themes    import APP_THEME
 from    koko.cam.workflow import FabWorkflowPanel
 
@@ -46,6 +48,8 @@ class MainFrame(wx.Frame):
 
         # Horizontal sizer that contains script, output, and canvases
         core = wx.BoxSizer(wx.HORIZONTAL)
+
+        koko.IMPORT = ImportPanel(app, self)
 
         editor_panel = wx.Panel(self)
         editor_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -80,6 +84,9 @@ class MainFrame(wx.Frame):
         canvas_sizer.Add(koko.GLCANVAS, proportion=1, flag=wx.EXPAND)
         koko.GLCANVAS.Hide()
 
+        core.Add(koko.IMPORT,
+                flag=wx.EXPAND|wx.RIGHT, border=20)
+        koko.IMPORT.Hide()
         core.Add(editor_panel, proportion=4,
                  flag=wx.EXPAND|wx.RIGHT, border=10)
         core.Add(canvas_sizer, proportion=6,
@@ -321,6 +328,11 @@ class MainFrame(wx.Frame):
     def show_cam(self, evt):
         if type(evt) is not bool:   evt = evt.Checked()
         koko.FAB.Show(evt)
+        self.Layout()
+
+    def show_import(self, evt):
+        if type(evt) is not bool:   evt = evt.Checked()
+        koko.IMPORT.Show()
         self.Layout()
 
     def get_menu(self, *args):

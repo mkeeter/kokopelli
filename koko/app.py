@@ -121,7 +121,7 @@ class App(wx.App):
             @param value New mode ('cad,'asdf', or 'stl')
         """
         self._mode = value
-        if value in ['stl','asdf','png']:
+        if value in ['stl','asdf','png','vol']:
             koko.FRAME.get_menu('File','Reload').Enable(False)
             koko.FRAME.get_menu('File','Save').Enable(False)
             koko.FRAME.get_menu('File','Save As').Enable(False)
@@ -133,15 +133,22 @@ class App(wx.App):
             koko.FRAME.show_output(False)
             koko.FRAME.get_menu('View','Re-render').Enable(False)
 
-            if value in ['stl','png']:
+            # Disable all exports
+            if value in ['stl','png','vol']:
                 for e in ['.png','.svg','.stl',
                           '.dot','.asdf']:
                     koko.FRAME.get_menu('Export', e).Enable(False)
+
+            # Disable some exports
             elif value == 'asdf':
                 for e in ['.svg','.dot','.asdf']:
                     koko.FRAME.get_menu('Export', e).Enable(False)
             koko.FRAME.get_menu('Export','Show CAM panel').Check(True)
-            koko.FRAME.show_cam(True)
+
+            if value == 'vol':
+                koko.FRAME.show_import(True)
+            else:
+                koko.FRAME.show_cam(True)
 
         if value == 'cad':
             koko.FRAME.get_menu('File','Reload').Enable(True)
@@ -258,6 +265,7 @@ class App(wx.App):
         koko.PRIMS.clear()
         koko.CANVAS.clear()
         koko.GLCANVAS.clear()
+        koko.IMPORT.clear()
 
     def load(self):
         """ @brief Loads the current design file
@@ -320,6 +328,9 @@ class App(wx.App):
             koko.GLCANVAS.load_mesh(mesh)
             koko.FAB.set_input(asdf)
 
+        elif path[-4:] == '.vol':
+            self.mode = 'vol'
+            koko.IMPORT.set_target(self.directory, self.filename)
 
 ################################################################################
 
