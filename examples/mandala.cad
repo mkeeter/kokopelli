@@ -1,0 +1,52 @@
+##    Geometry header    ##
+[(koko.prims.utils.Slider, {'name': 'N', 'min': '12', 'max': '24', 'value': '17', 'y': '3.37806648161', 'x': '-0.0986350465531', 'size': '3.0'}),(koko.prims.utils.Slider, {'name': 'T', 'min': '0.05', 'max': '0.2', 'value': '0.075', 'y': '3.05176854553', 'x': '-0.0872853625212', 'size': '3'})]
+##    End of geometry header    ##
+"""
+examples/mandala.cad
+
+Demonstrates an intricate pattern parameterized by a pair of
+interactive sliders.
+
+Zoom out to see the sliders, then drag the handles to change system
+parameters.
+
+"""
+
+from koko.lib.shapes import *
+from math import sqrt
+import operator
+
+# Take the values from the sliders and store them as local variables
+N = int(N.value)
+T = T.value
+
+r = rectangle(-1, 1, -1, 1) - rectangle(-1+T, 1-T, -1+T, 1-T)
+r = move(rotate(r, 45), 0, sqrt(2))
+r = scale_x(r, 0, 0.5)
+r += circle(0, 1.5*sqrt(2), 0.1)
+r += rotate(
+    move(
+        rotate(rectangle(-0.1, 0.1, -0.1, 0.1), 45),
+    0, 1.8*sqrt(2)),
+360./N/2)
+
+r = reduce(
+    operator.add,
+    [rotate(r, i*360./N) for i in range(N)]
+)
+
+r += circle(0, 0, 1.1+T/2)
+r -= circle(0, 0, 1.1)
+r += circle(0, 0, 2*sqrt(2)) - circle(0, 0, 2*sqrt(2)-T/2)
+
+c = circle(0, 0, 0.55) - circle(0, 0, 0.55-T)
+c += rectangle(-0.55, 0.55, -T/2, T/2)
+c = scale_x(move(c, 0, 0.6), 0, 0.5)
+c = reduce(
+    operator.add,
+    [rotate(c, i*360./(N/2)) for i in range(N/2)]
+)
+c += circle(0, 0, 0.4)
+c -= circle(0, 0, 0.4-T/2)
+
+cad.shape = r + c

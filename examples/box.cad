@@ -1,0 +1,127 @@
+##    Geometry header    ##
+[(koko.prims.utils.Slider, {'name': 'width', 'min': '3', 'max': '6', 'value': '5', 'y': '1.97375873717', 'x': '-4.91360555318', 'size': '4'}),(koko.prims.utils.Slider, {'name': 'height', 'min': '1', 'max': '3', 'value': '1.75', 'y': '0.884683022512', 'x': '-4.81565072685', 'size': '4'}),(koko.prims.utils.Slider, {'name': 'depth', 'min': '2', 'max': '4', 'value': '3', 'y': '-0.329360592173', 'x': '-4.91794326139', 'size': '4'}),(koko.prims.utils.Slider, {'name': 'thickness', 'min': '0.1', 'max': '0.3', 'value': '0.23', 'y': '-1.36551208642', 'x': '-4.97365963174', 'size': '4.0'}),(koko.prims.points.Point, {'y': '(0)', 'x': '-1', 'name': 'divider'})]
+##    End of geometry header    ##
+"""
+examples/box.cad
+
+A simple press-fit jewelry box that uses UI sliders to parameterize design
+(sliders are shown when looking at cut sheet).  Change the 'mode' variable
+to switch between a cut sheet and an assembled view.
+
+In the cut sheet, parts are positioned relative to their bounds, which are
+automatically tracked and propagated.
+"""
+
+from koko.lib.shapes2d import *
+from koko.lib.shapes3d import *
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+# Change the selected mode to switch from 2D to 3D
+mode = 'cut sheet'
+#mode = 'assembled'
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+# Box settings 
+width = width.value #inches
+height = height.value #inches
+depth = depth.value #inches
+thickness = thickness.value #inches
+tabsize = 0.5 #inches
+
+dividerloc = 0.3 # percent
+dividerheight = 0.7 # percent
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+dividerloc = divider.x
+dividerheight = (height-thickness*2)*dividerheight
+
+base = (
+    rectangle(-width/2, width/2, -depth/2, depth/2) -
+    rectangle(-tabsize/2, tabsize/2, depth/2-thickness, depth/2) -
+    rectangle(width/2-thickness, width/2, -tabsize/2, tabsize/2) -
+    rectangle(-tabsize/2, tabsize/2, -depth/2, -depth/2+thickness) -
+    rectangle(-width/2, -width/2+thickness, -tabsize/2, tabsize/2)
+)
+base -= rectangle(dividerloc-thickness/2, dividerloc+thickness/2, -tabsize/2, tabsize/2)
+
+inset1 = (
+    rectangle(thickness, dividerheight+thickness, -depth/2+thickness, depth/2-thickness) +
+    tab(thickness, 0, tabsize, thickness, 90) -
+    rectangle(thickness+dividerheight/2., thickness+dividerheight, -thickness/2, thickness/2)
+)
+inset2 = (
+    rectangle(-width/2+thickness, dividerloc+thickness/2, 0, dividerheight) -
+    rectangle(dividerloc-thickness/2, dividerloc+thickness/2, 0, dividerheight/2)
+)
+
+short_side = (
+    rectangle(thickness, height, -depth/2+thickness, depth/2-thickness) -
+    rectangle(height-thickness, height, -depth/2+tabsize, depth/2-tabsize) +
+    tab(thickness, 0, tabsize, thickness, 90) +
+    tab(height/2, -depth/2+thickness, tabsize, thickness, 180) +
+    tab(height/2, depth/2-thickness, tabsize, thickness, 0)
+)
+long_side = (
+    rectangle(-width/2, width/2, thickness, height) -
+    rectangle(-width/2+tabsize, width/2-tabsize, height-thickness, height) -
+    rectangle(-width/2, -width/2+thickness, height/2-tabsize/2, height/2+tabsize/2) -
+    rectangle(width/2-thickness, width/2, height/2-tabsize/2, height/2+tabsize/2) +
+    tab(0, thickness, tabsize, thickness, 180)
+)
+
+top = (
+    rectangle(-width/2, width/2, -depth/2, depth/2)
+)
+corner = (
+    rectangle(-width/2, -width/2+thickness, -depth/2, -depth/2+tabsize) +
+    rectangle(-width/2, -width/2+tabsize, -depth/2, -depth/2+thickness)
+)
+top -= (corner + reflect_x(corner) + reflect_y(corner) + reflect_x(reflect_y(corner)))
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+if mode == 'assembled':
+    base = extrusion(base, -thickness, 0)
+    short_side = rotate_y(extrusion(short_side, -thickness/2, thickness/2), 90)
+    short_side = (
+        move(short_side, width/2-thickness/2, 0, -thickness) +
+        move(short_side, -width/2+thickness/2, 0, -thickness)
+    )
+    long_side = rotate_x(extrusion(long_side, -thickness/2, thickness/2), 90)
+    long_side = (
+        move(long_side, 0, depth/2-thickness/2, -thickness) +
+        move(long_side, 0, -depth/2+thickness/2, -thickness)
+    )
+    top = extrusion(top, 0, thickness)
+    top = move(top, 0, 0, height + 2*thickness)
+
+    inset1 = extrusion(inset1, -thickness/2, thickness/2)
+    inset1 = move(rotate_y(inset1, 90), dividerloc, 0, -thickness)
+
+    inset2 = extrusion(inset2, -thickness/2, thickness/2)
+    inset2 = rotate_x(inset2, 90)
+    cad.render_mode = '3D'
+
+elif mode == 'cut sheet':
+    gap = 0.2
+    short_side = move(short_side, gap + base.xmax - short_side.xmin, 0)
+    short_side += move(short_side, gap + short_side.xmax - short_side.xmin - thickness, 0)
+    long_side = move(long_side, gap + base.xmax - long_side.xmin, gap + base.ymax - long_side.ymin)
+    long_side += move(long_side, 0, gap + long_side.ymax - long_side.ymin - thickness)
+    top = move(top, 0, base.ymax - top.ymin + gap)
+    inset1 = move(inset1, gap + short_side.xmax - inset1.xmin - thickness, 0)
+    inset2 = rotate(inset2, 90)
+    inset2 = move(inset2, inset1.xmax - inset2.xmin + gap, inset1.ymin - inset2.ymin)
+    cad.render_mode = '2D'
+
+cad.shapes = (
+    color(inset1,'cyan'), color(inset2, 'magenta'),
+    color(long_side, 'blue'),
+    color(short_side,'green'),
+    color(base, 'yellow'),
+    color(top, 'red'),
+)
