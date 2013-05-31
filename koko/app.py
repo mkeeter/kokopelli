@@ -432,7 +432,9 @@ class App(wx.App):
         if '3D' in t:
             for s in shading:   s.Enable(True)
             koko.CANVAS.Hide()
-            koko.GLCANVAS.snap = not koko.GLCANVAS.IsShown()
+            if not koko.GLCANVAS.IsShown():
+                koko.GLCANVAS.snap = True
+                self.reeval_required = True
             koko.GLCANVAS.Show()
         elif '2D' in t:
             for s in shading:   s.Enable(False)
