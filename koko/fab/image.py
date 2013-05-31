@@ -40,22 +40,6 @@ class Image(object):
         else:
             raise ValueError('Invalid number of channels (must be 1 or 3)')
 
-        ## @var width
-        # Width in pixels
-        self.width      = w
-
-        ## @var height
-        # Height in pixels
-        self.height     = h
-
-        ## @var _channels
-        # Number of image channels (1 or 3)
-        self._channels  = channels
-
-        ## @var _depth
-        # Image bit depth (8, 16, 32, or 'f' for floating-point)
-        self._depth     = depth
-
         ## @var color
         # Base image color (used when merging black-and-white images)
         self.color      = None
@@ -75,6 +59,12 @@ class Image(object):
         eq = self.array == other.array
         if eq is False: return False
         else:           return eq.all()
+
+    @property
+    def width(self):    return self.array.shape[1]
+    @property
+    def height(self):   return self.array.shape[0]
+
 
     def copy(self, channels=None, depth=None):
         """ @brief Copies an image, optionally changing depth and channel count.
@@ -139,60 +129,62 @@ class Image(object):
 
 
     @property
-    def channels(self): return self._channels
+    def channels(self): return self.array.shape[2]
     @channels.setter
     def channels(self, c):
         """ @brief Sets the number of channels, convering as needed.
         """
-        if c == self._channels: return
-        elif c == 1 and self._channels == 3:
+        if c == self.channels: return
+        elif c == 1 and self.channels == 3:
             self.array = np.array(np.sum(self.array, axis=2)/3,
                                   dtype=self.array.dtype)
-        elif c == 3 and self._channels == 1:
+        elif c == 3 and self.channels == 1:
             self.array = np.dstack((self.array,self.array,self.array))
         else:
             raise ValueError('Invalid channel count (must be 1 or 3)')
-        self._channels = c
-
 
     @property
-    def depth(self):    return self._depth
+    def depth(self):
+        if   self.array.dtype == np.uint8:      return 8
+        elif self.array.dtype == np.uint16:     return 16
+        elif self.array.dtype == np.uint32:     return 32
+        elif self.array.dtype == np.float32:    return 'f'
+        else:   return None
     @depth.setter
     def depth(self, d):
         """ @brief Sets the image depth, convering as needed.
         """
-        if d == self._depth:    return
+        if d == self.depth:    return
         elif d == 8:
-            if self._depth == 16:
+            if self.depth == 16:
                 self.array = np.array(self.array >> 8, dtype=np.uint8)
-            elif self._depth == 32:
+            elif self.depth == 32:
                 self.array = np.array(self.array >> 24, dtype=np.uint8)
-            elif self._depth == 'f':
+            elif self.depth == 'f':
                 self.array = np.array(self.array*255, dtype=np.uint8)
         elif d == 16:
-            if self._depth == 8:
+            if self.depth == 8:
                 self.array = np.array(self.array << 8, dtype=np.uint16)
-            elif self._depth == 32:
+            elif self.depth == 32:
                 self.array = np.array(self.array >> 16, dtype=np.uint16)
-            elif self._depth == 'f':
+            elif self.depth == 'f':
                 self.array = np.array(self.array*65535, dtype=np.uint16)
         elif d == 32:
-            if self._depth == 8:
+            if self.depth == 8:
                 self.array = np.array(self.array << 24, dtype=np.uint32)
-            elif self._depth == 16:
+            elif self.depth == 16:
                 self.array = np.array(self.array << 16, dtype=np.uint32)
-            elif self._depth == 'f':
+            elif self.depth == 'f':
                 self.array = np.array(self.array*4294967295., dtype=np.uint32)
         elif d == 'f':
-            if self._depth == 8:
+            if self.depth == 8:
                 self.array = np.array(self.array/255., dtype=np.float32)
-            elif self._depth == 16:
+            elif self.depth == 16:
                 self.array = np.array(self.array/65535., dtype=np.float32)
-            elif self._depth == 32:
+            elif self.depth == 32:
                 self.array = np.array(self.array/4294967295., dtype=np.float32)
         else:
             raise ValueError("Invalid depth (must be 8, 16, 32, or 'f')")
-        self._depth = d
 
 
     @property
