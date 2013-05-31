@@ -15,11 +15,12 @@ struct ASDF_;
     @param offset Isosurface density value
     @param mm_per_voxel Voxel scale
     @param merge_leafs Boolean determining whether leaf cells are combined.
+    @param close_border Boolean determining if border samples are set to zero.
 */
 struct ASDF_* import_vol(const char* filename,
                          const int ni, const int nj, const int nk,
                          const float offset, const float mm_per_voxel,
-                         _Bool merge_leafs);
+                         const _Bool merge_leafs, const _Bool close_border);
 
 /** @brief Imports a region within a .vol file
     @details Recurses until the region size will fill less than 100 MB in RAM, then loads the relevant samples from the file and recursively constructs tree.
@@ -31,10 +32,12 @@ struct ASDF_* import_vol(const char* filename,
     @param shift Sampling level
     @param offset Isosurface density value
     @param merge_leafs Boolean determining whether leaf cells are combined.
+    @param close_border Boolean determining if border samples are set to zero.
 */
 struct ASDF_* import_vol_region(
     const char* filename, const int ni, const int nj, const int nk,
-    const Region r, const int shift, const float offset, _Bool merge_leafs);
+    const Region r, const int shift, const float offset,
+    const _Bool merge_leafs, const _Bool close_border);
 
 
 /** @brief Imports a 2D lattice

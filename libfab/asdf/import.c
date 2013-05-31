@@ -25,13 +25,21 @@ ASDF* build_from_lattice(
     const Region region, const float offset,
     const _Bool merge_leafs);
 
+_STATIC_
+ASDF* _import_vol_region(
+    const char* filename,
+    const int ni, const int nj, const int nk,
+    const Region r, const Region full,
+    const int shift, const float offset,
+    const _Bool merge_leafs, const _Bool close_border);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 ASDF* import_vol(
     const char* filename, const int ni, const int nj, const int nk,
-    const float offset, const float mm_per_voxel, _Bool merge_leafs)
+    const float offset, const float mm_per_voxel,
+    const _Bool merge_leafs, const _Bool close_border)
 {
 
     Region r = (Region){
@@ -45,19 +53,32 @@ ASDF* import_vol(
     );
 
     ASDF* const out = import_vol_region(
-        filename, ni, nj, nk,
-        r, 0, offset, merge_leafs
+        filename, ni, nj, nk, r, 0, offset, merge_leafs, close_border
     );
 
     free_arrays(&r);
     return out;
 }
 
-
 ASDF* import_vol_region(
-    const char* filename, const int ni, const int nj, const int nk,
-    const Region r, const int shift, const float offset,
-    const _Bool merge_leafs)
+    const char* filename,
+    const int ni, const int nj, const int nk,
+    const Region r,
+    const int shift, const float offset,
+    const _Bool merge_leafs, const _Bool close_border)
+{
+    return _import_vol_region(
+        filename, ni, nj, nk, r, r, shift, offset, merge_leafs, close_border
+    );
+}
+
+_STATIC_
+ASDF* _import_vol_region(
+    const char* filename,
+    const int ni, const int nj, const int nk,
+    const Region r, const Region full,
+    const int shift, const float offset,
+    const _Bool merge_leafs, const _Bool close_border)
 {
 
     printf(
@@ -81,9 +102,10 @@ ASDF* import_vol_region(
         uint8_t bits = octsect(r, octants);
         for (int i=0; i < 8; ++i) {
             if (bits & (1<<i)) {
-                asdf->branches[i] = import_vol_region(
+                asdf->branches[i] = _import_vol_region(
                     filename, ni, nj, nk,
-                    octants[i], shift, offset, merge_leafs
+                    octants[i], full, shift, offset,
+                    merge_leafs, close_border
                 );
             }
         }
@@ -119,11 +141,20 @@ ASDF* import_vol_region(
                     float sample;
                     fscanf(file, "%4c", (char*)&sample);
 
+                    if (close_border && (
+                            i == full.imin || i == full.imin + full.ni ||
+                            j == full.jmin || j == full.jmin + full.nj ||
+                            j == full.jmin || j == full.jmin + full.nj)
+                        )
+                    {
+                        sample = 0;
+                    }
+
                     data[(k-r.kmin)>>shift]
                         [(j-r.jmin)>>shift]
                         [(i-r.imin)>>shift] = -sample + offset;
 
-
+                    // Skip unsampled points.
                     for (int a=0; a < 4*((1 << shift) - 1); ++a) {
                         getc(file);
                     }
@@ -133,8 +164,8 @@ ASDF* import_vol_region(
         fclose(file);
 
 
-        // Construct a region with {ijk}min=0 so that build_from_vol
-        // indexes at the right point in the data array.
+        // Construct a region with {ijk}min=0 and a downsampled number of XYZ positions
+        // so that build_from_vol indexes at the right point in the data array.
         Region _r = (Region){
             .imin = 0, .jmin = 0, .kmin = 0,
             .ni = r.ni >> shift, .nj = r.nj >> shift, .nk = r.nk >> shift,
@@ -154,6 +185,7 @@ ASDF* import_vol_region(
             free(data[k]);
         }
         free(data);
+        free_arrays(&_r);
 
         printf(
             "    Loaded %i cells, %i leafs\n",

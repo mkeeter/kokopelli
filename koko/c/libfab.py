@@ -155,13 +155,14 @@ libfab.simplify.argtypes = [p(ASDF), ctypes.c_bool]
 # asdf/import.h
 libfab.import_vol_region.argtypes = (
     [p(ctypes.c_char)] + [ctypes.c_int]*3 +
-    [Region, ctypes.c_int, ctypes.c_float, ctypes.c_bool]
+    [Region, ctypes.c_int, ctypes.c_float,
+     ctypes.c_bool, ctypes.c_bool]
 )
 libfab.import_vol_region.restype  = p(ASDF)
 
 libfab.import_vol.argtypes = [
     p(ctypes.c_char), ctypes.c_int, ctypes.c_int, ctypes.c_int,
-    ctypes.c_float, ctypes.c_float, ctypes.c_bool
+    ctypes.c_float, ctypes.c_float, ctypes.c_bool, ctypes.c_bool
 ]
 libfab.import_vol.restype  = p(ASDF)
 
