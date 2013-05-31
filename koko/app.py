@@ -60,7 +60,7 @@ class App(wx.App):
         koko.APP = weakref.proxy(self)
         koko.TASKS = TaskBot()
 
-        self._mode = 'cad/cam'
+        self._mode = 'cad'
 
         # Open a file from the command line
         if len(sys.argv) > 1:
@@ -118,10 +118,10 @@ class App(wx.App):
     @mode.setter
     def mode(self, value):
         """ @brief Switches between CAD/CAM and CAM modes
-            @param value New mode (either 'cad/cam' or 'cam')
+            @param value New mode ('cad,'asdf', or 'stl')
         """
         self._mode = value
-        if value == 'cam':
+        if value in ['stl','asdf','png']:
             koko.FRAME.get_menu('File','Reload').Enable(False)
             koko.FRAME.get_menu('File','Save').Enable(False)
             koko.FRAME.get_menu('File','Save As').Enable(False)
@@ -132,20 +132,25 @@ class App(wx.App):
             koko.FRAME.get_menu('View','Show output').Check(False)
             koko.FRAME.show_output(False)
             koko.FRAME.get_menu('View','Re-render').Enable(False)
-            for e in ['.math','.png','.svg','.stl',
-                      '.dot','.asdf']:
-                koko.FRAME.get_menu('Export', e).Enable(False)
+
+            if value in ['stl','png']:
+                for e in ['.png','.svg','.stl',
+                          '.dot','.asdf']:
+                    koko.FRAME.get_menu('Export', e).Enable(False)
+            elif value == 'asdf':
+                for e in ['.svg','.dot','.asdf']:
+                    koko.FRAME.get_menu('Export', e).Enable(False)
             koko.FRAME.get_menu('Export','Show CAM panel').Check(True)
             koko.FRAME.show_cam(True)
 
-        elif value == 'cad/cam':
+        if value == 'cad':
             koko.FRAME.get_menu('File','Reload').Enable(True)
             koko.FRAME.get_menu('File','Save').Enable(True)
             koko.FRAME.get_menu('File','Save As').Enable(True)
             koko.FRAME.get_menu('View','Show script').Enable(True)
             koko.FRAME.get_menu('View','Show output').Enable(True)
             koko.FRAME.get_menu('View','Re-render').Enable(True)
-            for e in ['.math','.png','.svg','.stl',
+            for e in ['.png','.svg','.stl',
                       '.dot','.asdf']:
                 koko.FRAME.get_menu('Export', e).Enable(True)
 
@@ -184,7 +189,7 @@ class App(wx.App):
         if self.saved or dialogs.warn_changes():
 
             self.filename = ''
-            self.mode = 'cad/cam'
+            self.mode = 'cad'
             self.clear()
 
             koko.EDITOR.text = TEMPLATE
@@ -272,12 +277,12 @@ class App(wx.App):
             koko.EDITOR.text = text
             koko.FRAME.status = 'Loaded .cad file'
 
-            self.mode = 'cad/cam'
+            self.mode = 'cad'
             self.first_render = True
             self.savepoint(True)
 
         elif path[-4:] == '.png':
-            self.mode = 'cam'
+            self.mode = 'png'
             img = Image.load(path)
             koko.CANVAS.load_image(img)
             koko.GLCANVAS.load_image(img)
@@ -285,14 +290,17 @@ class App(wx.App):
             wx.CallAfter(self.snap_bounds)
 
         elif path[-4:] == '.stl':
-            self.mode = 'cam'
+            self.mode = 'stl'
             mesh = Mesh.load(path)
+
+            koko.FRAME.get_menu('View', '3D').Check(True)
+            self.render_mode('3D')
+
             koko.GLCANVAS.load_mesh(mesh)
             wx.CallAfter(self.snap_bounds)
 
         elif path[-5:] == '.asdf':
-            self.render_mode('3D')
-            self.mode = 'cam'
+            self.mode = 'asdf'
 
             msg = dialogs.display_message('Loading...', 'Loading ASDF.')
             msg.Raise()
@@ -305,6 +313,9 @@ class App(wx.App):
             mesh = asdf.triangulate()
             mesh.source = Struct(type=ASDF, file=path, depth=0)
             msg.Destroy()
+
+            koko.FRAME.get_menu('View', '3D').Check(True)
+            self.render_mode('3D')
 
             koko.GLCANVAS.load_mesh(mesh)
             koko.FAB.set_input(asdf)
@@ -386,13 +397,13 @@ class App(wx.App):
 
         # Recalculate math file then render
         if self.reeval_required:
-            if self.mode == 'cad/cam':  self.reeval()
+            if self.mode == 'cad':  self.reeval()
             self.reeval_required = False
             self.render_required = False
 
         # Render given valid math file
         if self.render_required:
-            if self.mode == 'cad/cam':  self.render()
+            if self.mode == 'cad':  self.render()
             self.render_required = False
 
         koko.TASKS.refine()
@@ -448,6 +459,33 @@ class App(wx.App):
         item = koko.FRAME.GetMenuBar().FindItemById(event.GetId())
         filetype = item.GetLabel()
 
+        if   self.mode == 'cad':    self.export_from_cad(filetype)
+        elif self.mode == 'asdf':   self.export_from_asdf(filetype)
+
+    def export_from_asdf(self, filetype):
+        asdf = koko.FAB.panels[0].input
+
+        if filetype == '.stl':
+            kwargs = {}
+        elif filetype == '.png':
+            dlg = dialogs.RenderDialog('.png export', asdf)
+            if dlg.ShowModal() == wx.ID_OK:
+                kwargs = dlg.results
+            else:
+                kwargs = None
+            dlg.Destroy()
+
+        if kwargs is None:  return
+
+        # Open up a save as dialog to get the export target
+        df = dialogs.save_as(self.directory, extension=filetype)
+        if df[1] == '':     return
+        path = os.path.join(*df)
+
+        koko.TASKS.export(asdf, path, **kwargs)
+
+
+    def export_from_cad(self, filetype):
         cad = koko.TASKS.cached_cad
 
         if 'failed' in koko.FRAME.status:
@@ -479,43 +517,50 @@ class App(wx.App):
 
         # Open up a dialog box to get the export resolution or settings
         if filetype == '.asdf':
-            dlg = dialogs.ResolutionDialog(10, '.asdf export',
-                                   cad, 'Merge leaf cells')
+            dlg = dialogs.ResolutionDialog(10, '.asdf export', cad)
+            key = None
         elif filetype == '.stl':
             dlg = dialogs.ResolutionDialog(10, '.stl export',
                                    cad, 'Watertight')
+            key = 'use_cms'
         elif filetype == '.png':
-            dlg = dialogs.ResolutionDialog(10, '.stl export',
-                                   cad, 'Heightmap')
+            dlg = dialogs.ResolutionDialog(
+                10, '.stl export', cad, 'Heightmap'
+            )
+            key = 'make_heightmap'
         elif filetype in '.svg':
-            dlg = dialogs.ResolutionDialog(10, '%s export' % filetype,
-                                    cad)
+            dlg = dialogs.ResolutionDialog(
+                10, '.svg export', cad
+            )
+            key = None
         elif filetype == '.dot':
             dlg = dialogs.CheckDialog('.dot export', 'Packed arrays')
+            key = 'dot_arrays'
         else:
             dlg = None
 
-        if dlg and dlg.ShowModal() == wx.ID_OK:
-            resolution = dlg.result
-            checked    = dlg.checked
-            success = True
-        elif dlg:
-            success = False
+        if dlg:
+            if dlg.ShowModal() == wx.ID_OK:
+                kwargs = {}
+                if isinstance(dlg, dialogs.ResolutionDialog):
+                    kwargs.update({'resolution': float(dlg.result)})
+                if key:
+                    kwargs.update({key: dlg.checked})
+            else:
+                kwargs = None
+            dlg.Destroy()
         else:
-            resolution = None
-            checked = None
-            success = True
-        if dlg: dlg.Destroy()
+                kwargs = {}
 
         # If we didn't get a valid resolution, then abort
-        if not success:  return
+        if kwargs is None:  return
 
         # Open up a save as dialog to get the export target
         df = dialogs.save_as(self.directory, extension=filetype)
         if df[1] == '':     return
         path = os.path.join(*df)
 
-        koko.TASKS.export(path, resolution, checked)
+        koko.TASKS.export(cad, path, **kwargs)
 
 ################################################################################
 

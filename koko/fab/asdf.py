@@ -150,7 +150,8 @@ class ASDF(object):
     def dz(self):
         """ @returns Z size (in mm) """
         return self.zmax - self.zmin
-
+    @property
+    def mm_per_unit(self):  return 1
 
 
     def rescale(self, mult):
@@ -254,7 +255,7 @@ class ASDF(object):
 
 
     def bounds(self, alpha=0, beta=0):
-        ''' Find the largest possible bounding box for this ASDF
+        ''' Find the minimum possible bounding box for this ASDF
             rotated with angles alpha and beta. '''
 
         # Create an array of the eight cube corners

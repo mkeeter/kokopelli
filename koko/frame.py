@@ -219,7 +219,6 @@ class MainFrame(wx.Frame):
         menu_bar.Append(view, 'View')
 
         export = wx.Menu()
-        attach(export, '.math', app.export, help='Export to .math file')
         attach(export, '.png',  app.export, help='Export to image file')
         attach(export, '.svg',  app.export, help='Export to svg file')
         attach(export, '.stl',  app.export, help='Export to stl file')

@@ -22,8 +22,8 @@ class ExportProgress(wx.Frame):
     ''' Frame with a progress bar and a cancel button.
         When the cancel button is pressed, events are set.
     '''
-    def __init__(self, title, event, c_event=None):
-        self.event, self.c_event = event, c_event
+    def __init__(self, title, event1, event2):
+        self.events = event1, event2
 
         wx.Frame.__init__(self, parent=koko.FRAME, title=title)
 
@@ -44,34 +44,23 @@ class ExportProgress(wx.Frame):
     def progress(self, v):  wx.CallAfter(self.gauge.SetValue, v)
 
     def cancel(self, event):
-        self.event.set()
-        if self.c_event:    self.c_event.set()
+        for e in self.events:   e.set()
 
 ################################################################################
 
-class ExportTask(object):
-    ''' A task representing an export task.
+class ExportTaskCad(object):
+    ''' A class representing a FabVars export task.
 
-        Requires a filename, cad structure, and resolution
-        (None if irrelevant)
+        Requires a filename and cad structure,
+        plus optional supporting arguments.
     '''
 
-    def __init__(self, filename, cad, resolution=None, checked=None):
+    def __init__(self, filename, cad, **kwargs):
 
         self.filename   = filename
         self.extension  = self.filename.split('.')[-1]
         self.cad        = cad
-        self.resolution = float(resolution) if resolution else None
-
-        # The checked parameter is interpreted differently based on
-        # what type of file we are exporting.
-        if   self.extension == 'asdf':  self.merge_leafs = checked
-        elif self.extension == 'stl':
-            self.use_cms     = checked
-            self.merge_leafs = True
-        elif self.extension == 'svg':   self.merge_leafs = True
-        elif self.extension == 'dot':   self.arrays = checked
-        elif self.extension == 'png':   self.heightmap = checked
+        for k in kwargs:    setattr(self, k, kwargs[k])
 
         self.event   = threading.Event()
         self.c_event = threading.Event()
@@ -85,11 +74,12 @@ class ExportTask(object):
         self.thread.daemon = True
         self.thread.start()
 
+
     def export_png(self):
         ''' Exports a png using libtree.
         '''
 
-        if self.heightmap:
+        if self.make_heightmap:
             out = self.make_image(self.cad.shape)
         else:
             i = 0
@@ -202,30 +192,36 @@ class ExportTask(object):
     def make_asdf(self, expr, flat=False):
         ''' Renders an expression to an ASDF '''
         if flat:
-            region = Region((expr.xmin - self.cad.border*expr.dx,
-                             expr.ymin - self.cad.border*expr.dy,
-                             0),
-                            (expr.xmax + self.cad.border*expr.dx,
-                             expr.ymax + self.cad.border*expr.dy,
-                             0),
-                             self.resolution*self.cad.mm_per_unit)
+            region = Region(
+                (expr.xmin - self.cad.border*expr.dx,
+                 expr.ymin - self.cad.border*expr.dy,
+                 0),
+                (expr.xmax + self.cad.border*expr.dx,
+                 expr.ymax + self.cad.border*expr.dy,
+                 0),
+                 self.resolution * self.cad.mm_per_unit
+            )
         else:
-            region = Region((expr.xmin - self.cad.border*expr.dx,
-                             expr.ymin - self.cad.border*expr.dy,
-                             expr.zmin - self.cad.border*expr.dz),
-                            (expr.xmax + self.cad.border*expr.dx,
-                             expr.ymax + self.cad.border*expr.dy,
-                             expr.zmax + self.cad.border*expr.dz),
-                             self.resolution*self.cad.mm_per_unit)
+            region = Region(
+                (expr.xmin - self.cad.border*expr.dx,
+                 expr.ymin - self.cad.border*expr.dy,
+                 expr.zmin - self.cad.border*expr.dz),
+                (expr.xmax + self.cad.border*expr.dx,
+                 expr.ymax + self.cad.border*expr.dy,
+                 expr.zmax + self.cad.border*expr.dz),
+                 self.resolution * self.cad.mm_per_unit
+            )
         asdf = expr.asdf(
             region=region, mm_per_unit=self.cad.mm_per_unit,
-            interrupt=self.c_event, merge_leafs=self.merge_leafs
+            interrupt=self.c_event
         )
         return asdf
+
 
     def make_contour(self, asdf):
         contour = asdf.contour(interrupt=self.c_event)
         return contour
+
 
     def make_mesh(self, asdf):
         ''' Renders an ASDF to a mesh '''
@@ -233,6 +229,7 @@ class ExportTask(object):
             return asdf.triangulate_cms()
         else:
             return asdf.triangulate(interrupt=self.c_event)
+
 
     def export_dot(self):
         ''' Saves a math tree as a .dot file. '''
@@ -243,8 +240,9 @@ class ExportTask(object):
         self.window.progress = 25
 
         # Save as a dot file
-        expr.save_dot(self.filename, self.arrays)
+        expr.save_dot(self.filename, self.dot_arrays)
         self.window.progress = 100
+
 
     def run(self):
         if self.extension == 'png':
@@ -257,8 +255,51 @@ class ExportTask(object):
             self.export_dot()
         elif self.extension == 'svg':
             self.export_svg()
-        elif self.extension == 'math':
-            self.cad.write(self.filename)
 
         wx.CallAfter(self.window.Destroy)
 
+################################################################################
+
+class ExportTaskASDF(object):
+    ''' A class representing an ASDF export task.
+    '''
+
+    def __init__(self, filename, asdf, **kwargs):
+        self.filename = filename
+        self.extension = self.filename.split('.')[-1]
+        self.asdf = asdf
+
+        for k in kwargs:    setattr(self, k, kwargs[k])
+
+        self.event = threading.Event()
+        self.c_event = threading.Event()
+
+        self.progress = ExportProgress(
+            'Exporting to %s' % self.extension, self.event, self.c_event
+        )
+
+        self.thread = threading.Thread(target=self.run)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def export_png(self):
+        img = self.asdf.render(
+            alpha=self.alpha, beta=self.beta, resolution=self.resolution
+        )
+        self.progress.progress = 90
+        img.save(self.filename)
+        self.progress.progress = 100
+
+    def export_stl(self):
+        mesh = self.asdf.triangulate_cms()
+        self.progress.progress = 60
+        mesh.save_stl(self.filename)
+        self.progress.progress = 100
+
+    def run(self):
+        if   self.extension == 'png':
+            self.export_png()
+        elif self.extension == 'stl':
+            self.export_stl()
+
+        wx.CallAfter(self.progress.Destroy)

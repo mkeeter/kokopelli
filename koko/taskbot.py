@@ -4,7 +4,9 @@ import random
 
 import koko
 from   koko.render import RenderTask, RefineTask, CollapseTask
-from   koko.export import ExportTask
+from   koko.export import ExportTaskCad, ExportTaskASDF
+
+from   koko.fab.fabvars import FabVars
 
 class TaskBot(object):
     """ @class TaskBot
@@ -50,14 +52,15 @@ class TaskBot(object):
         else:       self.tasks += [RenderTask(view, cad=self.cached_cad)]
 
 
-    def export(self, path, resolution, decimate):
+    def export(self, obj, path, **kwargs):
         """ @brief Begins a new export task
+            @param obj Object to export (FabVars or ASDF)
             @param path Filename (extension is used to determine export function)
-            @param resolution Export resolution (could be ignored)
-            @param decimate Boolean that determines whether ASDF leafs are merged
         """
-        self.export_task = ExportTask(path, self.cached_cad,
-                                      resolution, decimate)
+        if isinstance(obj, FabVars):
+            self.export_task = ExportTaskCad(path, obj, **kwargs)
+        else:
+            self.export_task = ExportTaskASDF(path, obj, **kwargs)
 
 
     def start_cam(self):

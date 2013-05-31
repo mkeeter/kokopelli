@@ -141,6 +141,90 @@ class ResolutionDialog(wx.Dialog):
 
 ################################################################################
 
+class RenderDialog(wx.Dialog):
+    ''' Dialog box that allows users to set resolution and rotation
+    '''
+    def __init__(self, title, asdf):
+        wx.Dialog.__init__(self, parent=None, title=title)
+
+        if asdf is not None:
+            self.asdf = asdf
+
+        self.res = wx.TextCtrl(self, wx.ID_ANY, style=wx.TE_PROCESS_ENTER)
+        self.alpha = wx.TextCtrl(self, wx.ID_ANY, style=wx.TE_PROCESS_ENTER)
+        self.beta = wx.TextCtrl(self, wx.ID_ANY, style=wx.TE_PROCESS_ENTER)
+
+        self.res.Bind(wx.EVT_CHAR, lambda e: self.limit_to_numbers(e, self.res))
+        self.alpha.Bind(wx.EVT_CHAR, lambda e: self.limit_to_numbers(e, self.alpha))
+        self.beta.Bind(wx.EVT_CHAR, lambda e: self.limit_to_numbers(e, self.beta))
+
+        for d in [self.res, self.alpha, self.beta]:
+            d.Bind(wx.EVT_TEXT, self.update_dimensions)
+            d.Bind(wx.EVT_TEXT_ENTER, self.done)
+
+        self.res.ChangeValue('10')
+        self.alpha.ChangeValue('0')
+        self.beta.ChangeValue('0')
+
+        gs = wx.GridSizer(3, 2)
+        gs.Add(wx.StaticText(self, wx.ID_ANY, 'Resolution (pixels/mm)'),
+                flag=wx.LEFT|wx.TOP, border=10)
+        gs.Add(self.res, flag=wx.RIGHT|wx.TOP, border=10)
+        gs.Add(wx.StaticText(self, wx.ID_ANY, 'Z rotation (degrees)'),
+                flag=wx.LEFT|wx.TOP, border=10)
+        gs.Add(self.alpha, flag=wx.RIGHT|wx.TOP, border=10)
+        gs.Add(wx.StaticText(self, wx.ID_ANY, 'X\' rotation (degrees)'),
+                flag=wx.LEFT|wx.TOP, border=10)
+        gs.Add(self.beta, flag=wx.RIGHT|wx.TOP, border=10)
+
+        hbox = wx.BoxSizer(wx.VERTICAL)
+        hbox.Add(gs)
+        self.dimensions = wx.StaticText(self, wx.ID_ANY, '')
+        hbox.Add(self.dimensions, flag=wx.ALL, border=10)
+        okButton = wx.Button(self, label='OK')
+        okButton.Bind(wx.EVT_BUTTON, self.done)
+        hbox.Add(okButton, flag=wx.ALL, border=10)
+
+        self.update_dimensions()
+        self.SetSizerAndFit(hbox)
+
+    def limit_to_numbers(self, event, box):
+        valid = '0123456789'
+        if not '.' in box.GetValue():
+            valid += '.'
+
+        keycode = event.GetKeyCode()
+        if keycode < 32 or keycode >= 127 or chr(keycode) in valid:
+            event.Skip()
+
+    def update_dimensions(self, event=None):
+        try:
+            res = float(self.res.GetValue())
+            alpha = float(self.alpha.GetValue())
+            beta = float(self.beta.GetValue())
+        except ValueError:
+            label = 'Image size: 0 x 0 (x 0)'
+        else:
+            r = self.asdf.bounding_region(res, alpha, beta)
+            label = 'Image size: %i x %i (x %i)' % (r.ni, r.nj, r.nk)
+        self.dimensions.SetLabel(label)
+
+    def done(self, event):
+        ''' Save results from UI elements in self.results
+        '''
+        self.results = {
+            'resolution':   self.res.GetValue(),
+            'alpha':        self.alpha.GetValue(),
+            'beta':         self.beta.GetValue()
+        }
+
+        for k in self.results:
+            try: self.results[k] = float(self.results[k])
+            except ValueError:  self.EndModal(wx.ID_CANCEL)
+        self.EndModal(wx.ID_OK)
+
+################################################################################
+
 class RescaleDialog(wx.Dialog):
     ''' Dialog box that allows users to rescale an image or asdf '''
     def __init__(self, title, source):
@@ -221,8 +305,6 @@ class CheckDialog(wx.Dialog):
         self.SetSizerAndFit(hbox)
 
     def done(self, event):
-        # Dummy results for self.result
-        self.result = None
         self.checked = self.check.IsChecked()
         self.EndModal(wx.ID_OK)
 
