@@ -84,6 +84,7 @@ void render8(PackedTree* tree, Region region,
     // Subdivide and recurse if we're not at voxel size.
     if (region.ni*region.nj*region.nk > 1) {
         Region A, B;
+
         bisect(region, &A, &B);
 
         render8(tree, B, img, halt);
@@ -157,19 +158,11 @@ void render16(PackedTree* tree, Region region,
     // Special interrupt system, set asynchronously by on high
     if (*halt)  return;
 
-#if COUNTER
-    int node_count = 0;
-    for (unsigned level=0; level < tree->num_levels; ++level)
-        node_count += tree->active[level];
-    printf("<%i>", node_count);
-#endif
-
     // Render pixel-by-pixel if we're below a certain size.
     if (region.voxels > 0 && region.voxels < MIN_VOLUME) {
         region16(tree, region, img);
         return;
     }
-
 
     // Pre-emptively halt evaluation if all the points in this
     // region are already light.
@@ -204,9 +197,6 @@ void render16(PackedTree* tree, Region region,
     if (result.upper < 0 || result.lower >= 0)  return;
 
 #if PRUNE
-    #if COUNTER
-        printf("p");
-    #endif
     disable_nodes(tree);
     disable_nodes_binary(tree);
 #endif
@@ -221,9 +211,6 @@ void render16(PackedTree* tree, Region region,
     }
 
 #if PRUNE
-    #if COUNTER
-        printf("o");
-    #endif
     enable_nodes(tree);
 #endif
 
