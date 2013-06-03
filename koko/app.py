@@ -132,7 +132,6 @@ class App(wx.App):
             koko.FRAME.get_menu('Export', e).Enable(True)
 
         if value in ['stl','asdf','png','vol']:
-            print 'First branch taken'
             koko.FRAME.get_menu('File','Reload').Enable(False)
             koko.FRAME.get_menu('File','Save').Enable(False)
             koko.FRAME.get_menu('File','Save As').Enable(False)
