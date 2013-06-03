@@ -4,6 +4,10 @@
 
 #include "asdf/asdf.h"
 
+#include "tree/packed.h"
+#include "tree/node/node.h"
+#include "tree/node/opcodes.h"
+
 #include "util/region.h"
 #include "util/vec3f.h"
 
@@ -198,6 +202,31 @@ int bisect(const Region r, Region* const A, Region* const B)
         bisect_z(r, A, B);
 
     return 0;
+}
+
+int bisect_active(const Region r, const PackedTree* tree,
+                  Region* const A, Region* const B)
+{
+    if (r.ni * r.nj * r.nk == 1) {
+        *A = r;
+        return 1;
+    }
+
+    const uint8_t axes = active_axes(tree);
+
+    if ((axes & 4) && r.ni >= r.nj && r.ni >= r.nk) {
+        bisect_x(r, A, B);
+        return 0;
+    } else if ((axes & 2) && r.nj >= r.nk) {
+        bisect_y(r, A, B);
+        return 0;
+    } else if (axes & 1) {
+        bisect_z(r, A, B);
+        return 0;
+    } else {
+        *A = r;
+        return 1;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

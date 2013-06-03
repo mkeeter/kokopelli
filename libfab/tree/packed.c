@@ -189,3 +189,22 @@ void enable_nodes(PackedTree* tree)
         tree->disabled[level] = next;
     }
 }
+
+uint8_t active_axes(const PackedTree* const tree)
+{
+    if (!tree->num_levels)  return 0;
+
+    uint8_t active = 0;
+    if (tree->num_levels) {
+        for (int a=0; a < tree->active[0]; ++a) {
+            switch (tree->nodes[0][a]->opcode) {
+                case OP_X:  active |= (1 << 2); break;
+                case OP_Y:  active |= (1 << 1); break;
+                case OP_Z:  active |= (1 << 0); break;
+                default: ;
+            }
+        }
+    }
+
+    return active;
+}

@@ -1,6 +1,8 @@
 #ifndef PACKED_H
 #define PACKED_H
 
+#include <stdint.h>
+
 #include "tree/tree.h"
 
 /** @struct ustack_
@@ -88,5 +90,11 @@ void disable_nodes_binary(PackedTree* tree);
     an evaluation continues further down the list.
 */
 void enable_nodes(PackedTree* tree);
+
+/** @brief Returns a bit mask containing active axes in a tree.
+    @details
+    The bit mask is of the form (x_active << 2) | (y_active << 1) | (z_active)
+*/
+uint8_t active_axes(const PackedTree* const tree);
 
 #endif
