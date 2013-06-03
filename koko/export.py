@@ -245,17 +245,7 @@ class ExportTaskCad(object):
 
 
     def run(self):
-        if self.extension == 'png':
-            self.export_png()
-        elif self.extension == 'stl':
-            self.export_stl()
-        elif self.extension == 'asdf':
-            self.export_asdf()
-        elif self.extension == 'dot':
-            self.export_dot()
-        elif self.extension == 'svg':
-            self.export_svg()
-
+        getattr(self, 'export_%s' % self.extension)()
         wx.CallAfter(self.window.Destroy)
 
 ################################################################################
@@ -296,10 +286,11 @@ class ExportTaskASDF(object):
         mesh.save_stl(self.filename)
         self.progress.progress = 100
 
-    def run(self):
-        if   self.extension == 'png':
-            self.export_png()
-        elif self.extension == 'stl':
-            self.export_stl()
+    def export_asdf(self):
+        self.asdf.save(self.filename)
+        koko.APP.savepoint(True)
+        self.progress.progress = 100
 
+    def run(self):
+        getattr(self, 'export_%s' % self.extension)()
         wx.CallAfter(self.progress.Destroy)
