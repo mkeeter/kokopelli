@@ -16,10 +16,20 @@ try:
     import OpenGL
     from OpenGL.GL      import *
     from OpenGL.arrays  import vbo
+    from OpenGL.GLUT    import *
     from OpenGL.GL      import shaders
 except ImportError:
     print 'kokopelli error: PyOpenGL import failed!'
     sys.exit(1)
+
+
+class DragHandler(object):
+    def deproject(self, dx, dy):
+        return Vec3f(
+            0.01 / koko.GLCANVAS.scale*dx,
+            -0.01 / koko.GLCANVAS.scale*dy
+        ).deproject(koko.GLCANVAS.alpha, koko.GLCANVAS.beta)
+
 
 ################################################################################
 
@@ -41,7 +51,7 @@ class GLCanvas(glcanvas.GLCanvas):
         self.Bind(wx.EVT_MOTION,     self.evt_mouse_move)
         self.Bind(wx.EVT_MOUSEWHEEL, self.evt_mouse_scroll)
 
-        self.mouse_spin = self.mouse_pan = False
+        self.drag_target = None
         self.alpha = 0
         self.beta  = 0
 
@@ -130,37 +140,46 @@ class GLCanvas(glcanvas.GLCanvas):
 ################################################################################
 
     def evt_mouse_left_down(self, evt):
+        glutSetCursor(GLUT_CURSOR_NONE)
         self.mouse = wx.Point(evt.GetX(), evt.GetY())
-        if wx.GetKeyState(wx.WXK_SHIFT):
-            self.mouse_pan  = True
-        else:
-            self.mouse_spin = True
+        self.drag_target = self.query(evt.GetX(), evt.GetY())
+        self.Refresh()
 
 ################################################################################
 
     def evt_mouse_left_up(self, evt):
-        self.mouse_spin = self.mouse_pan = False
+        glutSetCursor(GLUT_CURSOR_INHERIT)
+        self.drag_target = None
+        self.Refresh()
 
 ################################################################################
 
+    def spin_handler(self):
+        class SpinHandler(DragHandler):
+            def drag(self, dx, dy):
+                koko.GLCANVAS.alpha = (koko.GLCANVAS.alpha + dx) % 360
+                koko.GLCANVAS.beta -= dy
+                if   koko.GLCANVAS.beta < 0:   koko.GLCANVAS.beta = 0
+                elif koko.GLCANVAS.beta > 180: koko.GLCANVAS.beta = 180
+                koko.GLCANVAS.LOD_complete = False
+        return SpinHandler()
+
+    def pan_handler(self):
+        class PanHandler(DragHandler):
+            def drag(self, dx, dy):
+                proj = self.deproject(dx, dy)
+                koko.GLCANVAS.center.x -= proj.x
+                koko.GLCANVAS.center.y -= proj.y
+                koko.GLCANVAS.center.z -= proj.z
+                koko.GLCANVAS.LOD_complete = False
+        return PanHandler()
+
     def evt_mouse_move(self, evt):
         pos = wx.Point(evt.GetX(), evt.GetY())
-        if self.mouse_spin:
+        if self.drag_target:
             delta = pos - self.mouse
-            self.alpha = (self.alpha + delta.x) % 360
-            self.beta  -= delta.y
-            if   self.beta < 0: self.beta = 0
-            elif self.beta > 180: self.beta = 180
+            self.drag_target.drag(delta.x, delta.y)
             self.Refresh()
-        elif self.mouse_pan:
-            delta = pos - self.mouse
-            delta = Vec3f(0.01/self.scale*delta.x, -0.01/self.scale*delta.y, 0)
-            proj = delta.deproject(self.alpha, self.beta)
-            self.center.x -= proj.x
-            self.center.y -= proj.y
-            self.center.z -= proj.z
-            self.Refresh()
-        self.LOD_complete = False
         self.mouse = pos
 
 ################################################################################
@@ -704,6 +723,46 @@ class GLCanvas(glcanvas.GLCanvas):
 
         glPopMatrix()
 
+    def query(self, px, py):
+        bc = koko.IMPORT.bounding_cube()
+        if bc is not None:
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+            glPushMatrix()
+            self.orient()
+
+            glPushMatrix()
+            glTranslate(bc[0], bc[2], bc[4])
+            glColor3f(1, 0, 0)
+            glutSolidSphere(1, 10, 10)
+            glPopMatrix()
+
+            glPushMatrix()
+            glTranslate(bc[1], bc[3], bc[5])
+            glColor3f(0, 1, 0)
+            glutSolidSphere(1, 10, 10)
+            glPopMatrix()
+
+            glPopMatrix()
+
+            width, height = self.GetClientSize()
+            pixels = glReadPixels(
+                px, height-py, 1, 1, GL_RGB, GL_UNSIGNED_BYTE
+            )
+
+            print map(ord, pixels)
+            if ord(pixels[0]):
+                return koko.IMPORT.bottom_drag()
+            elif ord(pixels[1]):
+                return koko.IMPORT.top_drag()
+
+
+        if wx.GetKeyState(wx.WXK_SHIFT):
+            return self.pan_handler()
+        else:
+            return self.spin_handler()
+
 ################################################################################
 
     def draw_axes(self):
@@ -768,15 +827,41 @@ class GLCanvas(glcanvas.GLCanvas):
 
     def draw_import_bounds(self):
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        glColor3f(0.4, 0.5, 1)
+
+        # Terrible hack to detect if we're dragging one of the
+        # import region corners.
+        if self.drag_target and hasattr(self.drag_target, 'corner'):
+            corner = self.drag_target.corner
+        else:
+            corner = None
+
         glLineWidth(2)
         bc = koko.IMPORT.bounding_cube()
         if bc is None:  return
+        glColor3f(38/255., 139/255., 210/255.)
+
         self.draw_cube(
             Interval(bc[0], bc[1]),
             Interval(bc[2], bc[3]),
             Interval(bc[4], bc[5])
         )
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDisable(GL_DEPTH_TEST)
+
+        if corner == 'min': glColor3f(203/255., 75/255., 22/255.)
+        else:               glColor3f(38/255., 139/255., 210/255.)
+        glPushMatrix()
+        glTranslate(bc[0], bc[2], bc[4])
+        glutSolidSphere(1, 10, 10)
+        glPopMatrix()
+
+        if corner == 'max': glColor3f(203/255., 75/255., 22/255.)
+        else:               glColor3f(38/255., 139/255., 210/255.)
+        glPushMatrix()
+        glTranslate(bc[1], bc[3], bc[5])
+        glutSolidSphere(1, 10, 10)
+        glPopMatrix()
+        glEnable(GL_DEPTH_TEST)
 
 
 ################################################################################
