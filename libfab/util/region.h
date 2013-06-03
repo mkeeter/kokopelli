@@ -6,6 +6,7 @@
 #include "util/vec3f.h"
 
 struct ASDF_;
+struct PackedTree_;
 
 typedef struct Region_ {
     uint32_t imin, jmin, kmin;
@@ -44,7 +45,6 @@ void free_arrays(Region* const R);
  */
 int bisect(const Region r, Region* const A, Region* const B);
 
-
 /*  octsect
  *
  *  Splits a region in two along all three axes if possible, storing
@@ -53,6 +53,11 @@ int bisect(const Region r, Region* const A, Region* const B);
  */
 uint8_t octsect(const Region R, Region* const out);
 
+/** @brief Splits a region along each active axis of the given MathTree
+    @returns Bit mask of newly populated regions.
+*/
+int octsect_active(const Region r, const struct PackedTree_* tree,
+       Region* const out);
 
 /*  octsect_merged
  *

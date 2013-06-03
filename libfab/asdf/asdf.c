@@ -112,8 +112,8 @@ ASDF* build_asdf(
         // Construct a result interval from corner values
         result = (Interval){asdf->d[0], asdf->d[0]};
         for (int n=1; n < 8; ++n) {
-            if (asdf->d[n] < result.lower)  result.lower = asdf->d[n];
-            if (asdf->d[n] > result.upper)  result.upper = asdf->d[n];
+            result.lower = fmin(result.lower, asdf->d[n]);
+            result.upper = fmax(result.upper, asdf->d[n]);
         }
     }
 
@@ -124,31 +124,40 @@ ASDF* build_asdf(
         asdf->state = EMPTY;
     else if (region.voxels == 1) {
         asdf->state = LEAF;
-        return asdf;
     }
 
     if (asdf->state != BRANCH) {
-        for (int n=0; n < 8; ++n) {
-            asdf->d[n] = eval_f(tree,
-                (n & 4) ? asdf->X.upper : asdf->X.lower,
-                (n & 2) ? asdf->Y.upper : asdf->Y.lower,
-                (n & 1) ? asdf->Z.upper : asdf->Z.lower);
-        }
+        return asdf;
     } else {
 
         #if PRUNE
             disable_nodes(tree);
         #endif
 
-        // Fill in up to eight octants, depending on whether we can still
-        // split the region along this particular axis
         Region octants[8];
-        uint8_t bits = octsect(region, octants);
-        for (int i=0; i < 8; ++i) {
-            if (bits & (1 << i)) {
-                asdf->branches[i] = build_asdf(tree, octants[i],
-                                               merge_leafs, halt);
+        uint8_t bits = octsect_active(region, tree, octants);
+
+        // If there's at least one active axis along which we can
+        // split the system, then subdivide and recurse
+        if (bits > 1) {
+            // Fill in up to eight octants, depending on whether we can still
+            // split the region along this particular axis
+            for (int i=0; i < 8; ++i) {
+                if (bits & (1 << i)) {
+                    asdf->branches[i] = build_asdf(tree, octants[i],
+                                                   merge_leafs, halt);
+                }
             }
+        }
+        // Otherwise, we'll transform this into a leaf cell.
+        else {
+            for (int n=0; n < 8; ++n) {
+                asdf->d[n] = eval_f(tree,
+                    (n & 4) ? asdf->X.upper : asdf->X.lower,
+                    (n & 2) ? asdf->Y.upper : asdf->Y.lower,
+                    (n & 1) ? asdf->Z.upper : asdf->Z.lower);
+            }
+            asdf->state = LEAF;
         }
 
         #if PRUNE

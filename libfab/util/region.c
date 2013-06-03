@@ -204,31 +204,6 @@ int bisect(const Region r, Region* const A, Region* const B)
     return 0;
 }
 
-int bisect_active(const Region r, const PackedTree* tree,
-                  Region* const A, Region* const B)
-{
-    if (r.ni * r.nj * r.nk == 1) {
-        *A = r;
-        return 1;
-    }
-
-    const uint8_t axes = active_axes(tree);
-
-    if ((axes & 4) && r.ni >= r.nj && r.ni >= r.nk) {
-        bisect_x(r, A, B);
-        return 0;
-    } else if ((axes & 2) && r.nj >= r.nk) {
-        bisect_y(r, A, B);
-        return 0;
-    } else if (axes & 1) {
-        bisect_z(r, A, B);
-        return 0;
-    } else {
-        *A = r;
-        return 1;
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // Splits a region in two along either the x or y axis
@@ -284,6 +259,39 @@ uint8_t octsect(const Region R, Region* const out)
     return bits;
 }
 
+int octsect_active(const Region R, const PackedTree* tree, Region* const out)
+{
+    out[0] = R;
+    uint8_t bits = 1;
+    const uint8_t active = active_axes(tree);
+
+    if (R.nk > 1 && (active & 1)) {
+        bisect_z(out[0], out, out+1);
+        bits |= (bits << 1);
+    }
+
+    if (R.nj > 1 && (active & 2)) {
+        if (bits & (1 << 0))
+            bisect_y(out[0], out,   out+2);
+        if (bits & (1 << 1))
+            bisect_y(out[1], out+1, out+3);
+        bits |= (bits << 2);
+    }
+
+    if (R.ni > 1 && (active & 4)) {
+        if (bits & (1 << 0))
+            bisect_x(out[0], out,   out+4);
+        if (bits & (1 << 1))
+            bisect_x(out[1], out+1, out+5);
+        if (bits & (1 << 2))
+            bisect_x(out[2], out+2, out+6);
+        if (bits & (1 << 3))
+            bisect_x(out[3], out+3, out+7);
+        bits |= (bits << 4);
+    }
+
+    return bits;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
