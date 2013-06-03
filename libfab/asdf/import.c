@@ -148,7 +148,6 @@ ASDF* _import_vol_region(
                             k == full.kmin || k == full.kmin + full.nk)
                         )
                     {
-                        printf("!\n");
                         sample = 0;
                     }
 
