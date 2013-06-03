@@ -4,7 +4,7 @@ project(libfab)
 #set(CMAKE_BUILD_TYPE DEBUG)
 set(CMAKE_BUILD_TYPE RELEASE)
 
-set(CMAKE_C_FLAGS "-Wall -g -fPIC -pedantic -std=gnu99")
+set(CMAKE_C_FLAGS "-Wall -g -fPIC -pedantic -std=c99")
 set(CMAKE_C_FLAGS_RELEASE  "-O3 -D '_STATIC_=static'")
 set(CMAKE_C_FLAGS_DEBUG    "-O0 -D '_STATIC_= '")
 
