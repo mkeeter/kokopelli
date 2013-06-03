@@ -332,7 +332,7 @@ class MainFrame(wx.Frame):
 
     def show_import(self, evt):
         if type(evt) is not bool:   evt = evt.Checked()
-        koko.IMPORT.Show()
+        koko.IMPORT.Show(evt)
         self.Layout()
 
     def get_menu(self, *args):
