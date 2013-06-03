@@ -67,7 +67,6 @@ ASDF* import_vol_region(
     const int shift, const float offset,
     const _Bool merge_leafs, const _Bool close_border)
 {
-    printf("Importing with close_border = %s\n", close_border ? "True" : "False");
     return _import_vol_region(
         filename, ni, nj, nk, r, r, shift, offset, merge_leafs, close_border
     );
@@ -126,19 +125,20 @@ ASDF* _import_vol_region(
             }
         }
 
+        const int mask = ~((1 << shift) - 1);
         // Load region of data into the resampled data array
         FILE* file = fopen(filename, "rb");
-        for (int k=r.kmin; k <= r.kmin+r.nk; k += (1 << shift)) {
-            for (int j=r.jmin; j <= r.jmin+r.nj; j += (1 << shift)) {
+        for (int k=r.kmin & mask; k <= (r.kmin & mask)+r.nk; k += (1 << shift)) {
+            for (int j=r.jmin & mask; j <= (r.jmin & mask)+r.nj; j += (1 << shift)) {
 
                 // Seek to the start of this data block
                 fseek(
                     file,
-                    4*(k*ni*nj + j*ni + r.imin),
+                    4*(k*ni*nj + j*ni + (r.imin & mask)),
                     SEEK_SET
                 );
 
-                for (int i=r.imin; i <= r.imin+r.ni; i += (1 << shift)) {
+                for (int i=r.imin & mask; i <= (r.imin & mask)+r.ni; i += (1 << shift)) {
                     float sample;
                     fscanf(file, "%4c", (char*)&sample);
 
@@ -151,9 +151,9 @@ ASDF* _import_vol_region(
                         sample = 0;
                     }
 
-                    data[(k-r.kmin)>>shift]
-                        [(j-r.jmin)>>shift]
-                        [(i-r.imin)>>shift] = -sample + offset;
+                    data[(k-(r.kmin & mask))>>shift]
+                        [(j-(r.jmin & mask))>>shift]
+                        [(i-(r.imin & mask))>>shift] = -sample + offset;
 
                     // Skip unsampled points.
                     for (int a=0; a < 4*((1 << shift) - 1); ++a) {
