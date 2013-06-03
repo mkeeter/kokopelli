@@ -52,6 +52,7 @@ class GLCanvas(glcanvas.GLCanvas):
         self.Bind(wx.EVT_MOUSEWHEEL, self.evt_mouse_scroll)
 
         self.drag_target = None
+        self.hover_target = None
         self.alpha = 0
         self.beta  = 0
 
@@ -181,7 +182,9 @@ class GLCanvas(glcanvas.GLCanvas):
         if self.drag_target:
             delta = pos - self.mouse
             self.drag_target.drag(delta.x, delta.y)
-            self.Refresh()
+        else:
+            self.hover_target = self.query(evt.GetX(), evt.GetY())
+        self.Refresh()
         self.mouse = pos
 
 ################################################################################
@@ -756,7 +759,6 @@ class GLCanvas(glcanvas.GLCanvas):
                 px, height-py, 1, 1, GL_RGB, GL_UNSIGNED_BYTE
             )
 
-            print map(ord, pixels)
             if ord(pixels[0]):
                 return koko.IMPORT.bottom_drag()
             elif ord(pixels[1]):
@@ -837,6 +839,10 @@ class GLCanvas(glcanvas.GLCanvas):
         # import region corners.
         if self.drag_target and hasattr(self.drag_target, 'corner'):
             corner = self.drag_target.corner
+            color  = (203/255., 75/255., 22/255.)
+        elif self.hover_target and hasattr(self.hover_target, 'corner'):
+            corner = self.hover_target.corner
+            color  = (70/255., 170/255., 240/255.)
         else:
             corner = None
 
@@ -853,14 +859,14 @@ class GLCanvas(glcanvas.GLCanvas):
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         glDisable(GL_DEPTH_TEST)
 
-        if corner == 'min': glColor3f(203/255., 75/255., 22/255.)
+        if corner == 'min': glColor3f(*color)
         else:               glColor3f(38/255., 139/255., 210/255.)
         glPushMatrix()
         glTranslate(bc[0], bc[2], bc[4])
         glutSolidSphere(0.1/self.scale, 10, 10)
         glPopMatrix()
 
-        if corner == 'max': glColor3f(203/255., 75/255., 22/255.)
+        if corner == 'max': glColor3f(*color)
         else:               glColor3f(38/255., 139/255., 210/255.)
         glPushMatrix()
         glTranslate(bc[1], bc[3], bc[5])
