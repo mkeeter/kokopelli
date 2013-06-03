@@ -303,6 +303,7 @@ class ImportPanel(wx.Panel):
         koko.FRAME.get_menu('View', '3D').Check(True)
         koko.APP.render_mode('3D')
         koko.GLCANVAS.load_mesh(mesh)
+        koko.GLCANVAS.snap = True
 
 
     def bounding_cube(self):
@@ -348,6 +349,7 @@ class ImportPanel(wx.Panel):
         koko.FRAME.get_menu('View', '3D').Check(True)
         koko.APP.render_mode('3D')
         koko.GLCANVAS.load_mesh(mesh)
+        koko.GLCANVAS.snap = True
         koko.FAB.set_input(asdf)
 
         koko.FRAME.status = ''

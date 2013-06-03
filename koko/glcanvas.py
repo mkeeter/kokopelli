@@ -140,7 +140,8 @@ class GLCanvas(glcanvas.GLCanvas):
 ################################################################################
 
     def evt_mouse_left_down(self, evt):
-        glutSetCursor(GLUT_CURSOR_NONE)
+        cursor = wx.StockCursor(wx.CURSOR_BLANK)
+        self.SetCursor(cursor)
         self.mouse = wx.Point(evt.GetX(), evt.GetY())
         self.drag_target = self.query(evt.GetX(), evt.GetY())
         self.Refresh()
@@ -148,7 +149,8 @@ class GLCanvas(glcanvas.GLCanvas):
 ################################################################################
 
     def evt_mouse_left_up(self, evt):
-        glutSetCursor(GLUT_CURSOR_INHERIT)
+        cursor = wx.StockCursor(wx.CURSOR_ARROW)
+        self.SetCursor(cursor)
         self.drag_target = None
         self.Refresh()
 
