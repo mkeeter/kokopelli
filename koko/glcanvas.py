@@ -8,6 +8,7 @@ from    wx import glcanvas
 
 import  koko
 from    koko.c.vec3f    import Vec3f
+from    koko.c.interval import Interval
 from    koko.c.libfab   import libfab
 from    koko.fab.mesh   import Mesh
 
@@ -529,12 +530,15 @@ class GLCanvas(glcanvas.GLCanvas):
         else:
             self.draw_mesh(shader)
 
+        # Draw set of toolpaths
         if self.path_vbo is not None:
             self.draw_paths()
 
+        # Draw textured rectangle for 2D image
         if self.image is not None:
             self.draw_image()
 
+        # Draw border around window
         if self.border is not None:
             self.draw_border()
 
@@ -605,6 +609,8 @@ class GLCanvas(glcanvas.GLCanvas):
             self.draw_bounds()
         if koko.FRAME.get_menu('View', 'Show axes').IsChecked():
             self.draw_axes()
+        if koko.IMPORT.IsShown():
+            self.draw_import_bounds()
 
         glPopMatrix()
 
@@ -759,6 +765,18 @@ class GLCanvas(glcanvas.GLCanvas):
                 (self.image.ymin, self.image.ymax)
             )
 
+
+    def draw_import_bounds(self):
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glColor3f(0.4, 0.5, 1)
+        glLineWidth(2)
+        bc = koko.IMPORT.bounding_cube()
+        if bc is None:  return
+        self.draw_cube(
+            Interval(bc[0], bc[1]),
+            Interval(bc[2], bc[3]),
+            Interval(bc[4], bc[5])
+        )
 
 
 ################################################################################
