@@ -23,14 +23,19 @@ class ImportPanel(wx.Panel):
         vs = wx.BoxSizer(wx.VERTICAL)
 
         title = wx.lib.stattext.GenStaticText(
-                self, style=wx.ALIGN_CENTER, label='Import .vol'
+                self, style=wx.ALIGN_CENTER, label='.vol to ASDF import'
         )
         title.header = True
         vs.Add(title, flag=wx.TOP|wx.LEFT|wx.EXPAND, border=10)
 
+        hs = wx.BoxSizer(wx.HORIZONTAL)
         self.file_text = wx.StaticText(self, wx.ID_ANY, '')
+        hs.Add(self.file_text, flag=wx.EXPAND, proportion=1)
 
-        vs.Add(self.file_text, flag=wx.TOP|wx.LEFT, border=10)
+        preview = wx.Button(self, label='Preview')
+        preview.Bind(wx.EVT_BUTTON, self.preview)
+        hs.Add(preview, flag=wx.LEFT|wx.ALIGN_CENTER, border=10, proportion=1)
+        vs.Add(hs, flag=wx.TOP|wx.LEFT|wx.EXPAND, border=10)
 
         gs = wx.GridSizer(3, 2)
 
@@ -75,9 +80,6 @@ class ImportPanel(wx.Panel):
         gs.Add(self.boundary, flag=wx.TOP|wx.LEFT, border=10)
         vs.Add(gs, flag=wx.EXPAND)
 
-        preview = wx.Button(self, label='Full preview')
-        preview.Bind(wx.EVT_BUTTON, self.preview)
-        vs.Add(preview, flag=wx.TOP|wx.LEFT|wx.ALIGN_CENTER, border=10)
 
         t = wx.lib.stattext.GenStaticText(
                 self, style=wx.ALIGN_CENTER, label='Target region'
@@ -86,7 +88,7 @@ class ImportPanel(wx.Panel):
         vs.Add(t, flag=wx.TOP|wx.LEFT|wx.EXPAND, border=10)
 
         hs = wx.BoxSizer()
-        hs.Add(wx.StaticText(self, label='Entire region', style=wx.ALIGN_RIGHT),
+        hs.Add(wx.StaticText(self, label='Entire region'),
                 flag = wx.RIGHT, border=20, proportion=1)
         self.entire = wx.CheckBox(self)
         hs.Add(self.entire, proportion=1)
@@ -194,6 +196,13 @@ class ImportPanel(wx.Panel):
             self.show_bounds(False)
         else:
             self.show_bounds(True)
+            for a in 'ijk':
+                self.bounds_sliders[a+'min'].SetValue(0)
+                self.bounds_sliders[a+'max'].SetValue(
+                    self.bounds_sliders[a+'max'].GetMax()
+                )
+                self.sync_text(a+'min')
+                self.sync_text(a+'max')
         koko.FRAME.Layout()
         koko.GLCANVAS.Refresh()
 
@@ -210,13 +219,13 @@ class ImportPanel(wx.Panel):
                 [self.ni, self.nj, self.nk]
             )
         except ValueError:
-            if show_error:   dialogs.error('Invalid size!')
+            if show_error:   dialogs.error('Invalid sample count.')
             return
 
         size = os.path.getsize(self.filename)
         if size != ni*nj*nk*4:
             if show_error:
-                dialogs.error('File size does not match provided dimensions!')
+                dialogs.error('File size does not match provided dimensions.')
             return
 
         try:

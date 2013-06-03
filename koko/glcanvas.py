@@ -725,6 +725,9 @@ class GLCanvas(glcanvas.GLCanvas):
 
     def query(self, px, py):
         bc = koko.IMPORT.bounding_cube()
+
+        # Render an invisible layer with spheres on the minimum
+        # and maximum corner of the import bounding box.
         if bc is not None:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
@@ -735,13 +738,13 @@ class GLCanvas(glcanvas.GLCanvas):
             glPushMatrix()
             glTranslate(bc[0], bc[2], bc[4])
             glColor3f(1, 0, 0)
-            glutSolidSphere(1, 10, 10)
+            glutSolidSphere(0.1/self.scale, 10, 10)
             glPopMatrix()
 
             glPushMatrix()
             glTranslate(bc[1], bc[3], bc[5])
             glColor3f(0, 1, 0)
-            glutSolidSphere(1, 10, 10)
+            glutSolidSphere(0.1/self.scale, 10, 10)
             glPopMatrix()
 
             glPopMatrix()
@@ -852,14 +855,14 @@ class GLCanvas(glcanvas.GLCanvas):
         else:               glColor3f(38/255., 139/255., 210/255.)
         glPushMatrix()
         glTranslate(bc[0], bc[2], bc[4])
-        glutSolidSphere(1, 10, 10)
+        glutSolidSphere(0.1/self.scale, 10, 10)
         glPopMatrix()
 
         if corner == 'max': glColor3f(203/255., 75/255., 22/255.)
         else:               glColor3f(38/255., 139/255., 210/255.)
         glPushMatrix()
         glTranslate(bc[1], bc[3], bc[5])
-        glutSolidSphere(1, 10, 10)
+        glutSolidSphere(0.1/self.scale, 10, 10)
         glPopMatrix()
         glEnable(GL_DEPTH_TEST)
 
