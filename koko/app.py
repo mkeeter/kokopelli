@@ -310,17 +310,16 @@ class App(wx.App):
         elif path[-5:] == '.asdf':
             self.mode = 'asdf'
 
-            msg = dialogs.display_message('Loading...', 'Loading ASDF.')
-            msg.Raise()
+            koko.FRAME.status = 'Loading ASDF'
             wx.Yield()
 
             asdf = ASDF.load(path)
-            msg.txt.SetLabel('Triangulating')
+            koko.FRAME.status = 'Triangulating'
             wx.Yield()
 
             mesh = asdf.triangulate()
             mesh.source = Struct(type=ASDF, file=path, depth=0)
-            msg.Destroy()
+            koko.FRAME.status = ''
 
             koko.FRAME.get_menu('View', '3D').Check(True)
             self.render_mode('3D')

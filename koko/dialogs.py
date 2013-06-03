@@ -338,19 +338,3 @@ class TextFrame(wx.Frame):
     @text.setter
     def text(self, value):
         self.txt.text = value
-
-
-class MessageFrame(wx.Frame):
-    def __init__(self, title, message):
-        wx.Frame.__init__(self, koko.FRAME, title=title)
-
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        self.txt = wx.StaticText(self, wx.ID_ANY, message)
-        sizer.Add(self.txt, flag=wx.ALL, border=20)
-        self.SetSizerAndFit(sizer)
-        APP_THEME.apply(self)
-
-        self.Show()
-
-def display_message(title, message):
-    return MessageFrame(title, message)
