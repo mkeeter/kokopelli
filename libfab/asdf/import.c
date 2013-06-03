@@ -82,12 +82,12 @@ ASDF* _import_vol_region(
 {
 
     printf(
-        "Importing region (%i %i), (%i %i), (%i %i)\n",
-        r.imin, r.imin+r.ni, r.jmin, r.jmin+r.nj, r.kmin, r.kmin+r.nk
+        "Importing region (%i %i), (%i %i), (%i %i) with shift %i\n",
+        r.imin, r.imin+r.ni, r.jmin, r.jmin+r.nj, r.kmin, r.kmin+r.nk, shift
     );
 
     // Don't allocate more than 100 MB of RAM for the arrays
-    if (r.ni*r.nj*r.nk*4 > 100e6) {
+    if ((r.ni*r.nj*r.nk*4 >> (shift*3)) > 100e6) {
         printf("Subdividing!\n");
 
         ASDF* const asdf = calloc(1, sizeof(ASDF));
@@ -143,9 +143,12 @@ ASDF* _import_vol_region(
                     fscanf(file, "%4c", (char*)&sample);
 
                     if (close_border && (
-                            i == full.imin || i == full.imin + full.ni ||
-                            j == full.jmin || j == full.jmin + full.nj ||
-                            k == full.kmin || k == full.kmin + full.nk)
+                            i <= full.imin ||
+                            i >= ((full.imin + full.ni) & mask) ||
+                            j <= full.jmin ||
+                            j >= ((full.jmin + full.nj) & mask) ||
+                            k <= full.kmin ||
+                            k >= ((full.kmin + full.nk) & mask))
                         )
                     {
                         sample = 0;
