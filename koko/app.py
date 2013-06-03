@@ -121,7 +121,18 @@ class App(wx.App):
             @param value New mode ('cad,'asdf', or 'stl')
         """
         self._mode = value
+
+        koko.FRAME.get_menu('File','Reload').Enable(True)
+        koko.FRAME.get_menu('File','Save').Enable(True)
+        koko.FRAME.get_menu('File','Save As').Enable(True)
+        koko.FRAME.get_menu('View','Show script').Enable(True)
+        koko.FRAME.get_menu('View','Show output').Enable(True)
+        koko.FRAME.get_menu('View','Re-render').Enable(True)
+        for e in ['.png','.svg','.stl', '.dot','.asdf']:
+            koko.FRAME.get_menu('Export', e).Enable(True)
+
         if value in ['stl','asdf','png','vol']:
+            print 'First branch taken'
             koko.FRAME.get_menu('File','Reload').Enable(False)
             koko.FRAME.get_menu('File','Save').Enable(False)
             koko.FRAME.get_menu('File','Save As').Enable(False)
@@ -133,33 +144,19 @@ class App(wx.App):
             koko.FRAME.show_output(False)
             koko.FRAME.get_menu('View','Re-render').Enable(False)
 
-            # Disable all exports
+            # Disable all exports for these values
             if value in ['stl','png','vol']:
-                for e in ['.png','.svg','.stl',
-                          '.dot','.asdf']:
+                for e in ['.png','.svg','.stl', '.dot','.asdf']:
                     koko.FRAME.get_menu('Export', e).Enable(False)
 
-            # Disable some exports
+            # Disable some exports for these other values
             elif value == 'asdf':
-                for e in ['.svg','.dot','.asdf']:
+                for e in ['.svg','.dot']:
                     koko.FRAME.get_menu('Export', e).Enable(False)
-            koko.FRAME.get_menu('Export','Show CAM panel').Check(True)
 
-            if value == 'vol':
-                koko.FRAME.show_import(True)
-            else:
-                koko.FRAME.show_cam(True)
-
-        if value == 'cad':
-            koko.FRAME.get_menu('File','Reload').Enable(True)
-            koko.FRAME.get_menu('File','Save').Enable(True)
-            koko.FRAME.get_menu('File','Save As').Enable(True)
-            koko.FRAME.get_menu('View','Show script').Enable(True)
-            koko.FRAME.get_menu('View','Show output').Enable(True)
-            koko.FRAME.get_menu('View','Re-render').Enable(True)
-            for e in ['.png','.svg','.stl',
-                      '.dot','.asdf']:
-                koko.FRAME.get_menu('Export', e).Enable(True)
+            koko.FRAME.get_menu('Export','Show CAM panel').Check(value == 'vol')
+            koko.FRAME.show_import(value == 'vol')
+            koko.FRAME.show_cam(value != 'vol')
 
 ################################################################################
 
@@ -486,6 +483,8 @@ class App(wx.App):
             else:
                 kwargs = None
             dlg.Destroy()
+        elif filetype == '.asdf':
+            kwargs = {}
 
         if kwargs is None:  return
 
