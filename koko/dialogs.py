@@ -42,6 +42,10 @@ def save_as(directory, filename='', extension='.*'):
     if dlg.ShowModal() == wx.ID_OK:
         directory, filename = dlg.GetDirectory(), dlg.GetFilename()
 
+    # Fix for Ubuntu dialog box, which doesn't append extension
+    if extension != '.*' and filename[-len(extension):] != extension:
+        filename += extension
+
     dlg.Destroy()
     return directory, filename
 
