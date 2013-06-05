@@ -760,12 +760,14 @@ void merge_faces(ASDF* const asdf, const ASDF* const neighbors[6])
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-void make_consistent(ASDF* const asdf, const ASDF* const neighbors[6])
+_STATIC_
+_Bool make_consistent(ASDF* const asdf, const ASDF* const neighbors[6])
 {
     if (!asdf || asdf->state != BRANCH) {
-        return;
+        return true;
     }
+
+    _Bool consistent = true;
 
     for (int b=0; b < 8; ++b) {
         const ASDF* new_neighbors[6];
@@ -787,6 +789,7 @@ void make_consistent(ASDF* const asdf, const ASDF* const neighbors[6])
             const ASDF* n = get_neighbor_v(asdf, b, f, neighbors[f]);
 
             if (n && n->state == VIRTUAL && !n->branches[0]) {
+                consistent = false;
                 const uint8_t new_split  = n->d[1];
                 for (int c=0; c < 8; ++c) {
                     if (c & new_split)  continue;
@@ -794,18 +797,22 @@ void make_consistent(ASDF* const asdf, const ASDF* const neighbors[6])
                         split_cell(asdf->branches[c], new_split);
                 }
                 free_virtual_asdf((ASDF*)n);
-                n = NULL;
+                n = get_neighbor_v(asdf, b, f, neighbors[f]);
             }
             new_neighbors[f] = n;
         }
 
         // Recurse on the ASDF's branches
-        make_consistent(asdf->branches[b], new_neighbors);
+        if (!make_consistent(asdf->branches[b], new_neighbors)) {
+            consistent = false;
+        }
 
         for (int n=0; n < 6; ++n) {
             free_virtual_asdf((ASDF*)new_neighbors[n]);
         }
     }
+
+    return consistent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -843,7 +850,10 @@ Mesh* triangulate_cms(ASDF* const asdf)
 {
     // Modify the ASDF to resolve topological inconsistancies
     const ASDF* const neighbors[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
-    make_consistent(asdf, neighbors);
+    _Bool consistent = false;
+    while (!consistent) {
+        consistent = make_consistent(asdf, neighbors);
+    }
 
     // Fill each ASDF leaf cell face with paths
     populate_faces(asdf);
