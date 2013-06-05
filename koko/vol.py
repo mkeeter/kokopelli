@@ -162,8 +162,13 @@ class ImportPanel(wx.Panel):
                     )
                 except ValueError:  continue
 
-                if new_value < 0:           new_value = 0
-                max_value = koko.IMPORT.bounds_sliders[b+self.corner].GetMax()
+                if self.corner == 'min':
+                    min_value = 0
+                    max_value = koko.IMPORT.bounds_sliders[b+'max'].GetValue() - 1
+                elif self.corner == 'max':
+                    min_value = koko.IMPORT.bounds_sliders[b+'min'].GetValue() + 1
+                    max_value = koko.IMPORT.bounds_sliders[b+'max'].GetMax()
+                if new_value < min_value:   new_value = min_value
                 if new_value > max_value:   new_value = max_value
                 koko.IMPORT.bounds[b+self.corner].SetValue(str(new_value))
                 koko.IMPORT.sync_slider(b+self.corner)
@@ -178,8 +183,8 @@ class ImportPanel(wx.Panel):
         for a in 'ijk':
             try:                i = int(getattr(self, 'n'+a).GetValue())
             except ValueError:  continue
-            self.bounds_sliders[a+'min'].SetMax(i)
-            self.bounds_sliders[a+'max'].SetMax(i)
+            self.bounds_sliders[a+'min'].SetMax(max(0,i-1))
+            self.bounds_sliders[a+'max'].SetMax(max(0,i-1))
             self.sync_text(a+'min')
             self.sync_text(a+'max')
 
@@ -258,10 +263,7 @@ class ImportPanel(wx.Panel):
         else:
             for c in ['imin','jmin','kmin','imax','jmax','kmax']:
                 try:
-                    params[c] = (
-                        int(self.bounds[c].GetValue()) -
-                        (1 if 'max' in c else 0)
-                    )
+                    params[c] = int(self.bounds[c].GetValue())
                 except ValueError:
                     if show_error:
                         dialogs.error('Invalid parameter for %s' % c)
