@@ -16,7 +16,6 @@ try:
     import OpenGL
     from OpenGL.GL      import *
     from OpenGL.arrays  import vbo
-    from OpenGL.GLUT    import *
     from OpenGL.GL      import shaders
 except ImportError:
     print 'kokopelli error: PyOpenGL import failed!'
@@ -743,13 +742,21 @@ class GLCanvas(glcanvas.GLCanvas):
             glPushMatrix()
             glTranslate(bc[0], bc[2], bc[4])
             glColor3f(1, 0, 0)
-            glutSolidSphere(0.1/self.scale, 10, 10)
+            self.draw_cube(
+                Interval(-0.1/self.scale, 0.1/self.scale),
+                Interval(-0.1/self.scale, 0.1/self.scale),
+                Interval(-0.1/self.scale, 0.1/self.scale)
+            )
             glPopMatrix()
 
             glPushMatrix()
             glTranslate(bc[1], bc[3], bc[5])
             glColor3f(0, 1, 0)
-            glutSolidSphere(0.1/self.scale, 10, 10)
+            self.draw_cube(
+                Interval(-0.1/self.scale, 0.1/self.scale),
+                Interval(-0.1/self.scale, 0.1/self.scale),
+                Interval(-0.1/self.scale, 0.1/self.scale)
+            )
             glPopMatrix()
 
             glPopMatrix()
@@ -863,14 +870,22 @@ class GLCanvas(glcanvas.GLCanvas):
         else:               glColor3f(38/255., 139/255., 210/255.)
         glPushMatrix()
         glTranslate(bc[0], bc[2], bc[4])
-        glutSolidSphere(0.1/self.scale, 10, 10)
+        self.draw_cube(
+            Interval(-0.1/self.scale, 0.1/self.scale),
+            Interval(-0.1/self.scale, 0.1/self.scale),
+            Interval(-0.1/self.scale, 0.1/self.scale)
+        )
         glPopMatrix()
 
         if corner == 'max': glColor3f(*color)
         else:               glColor3f(38/255., 139/255., 210/255.)
         glPushMatrix()
         glTranslate(bc[1], bc[3], bc[5])
-        glutSolidSphere(0.1/self.scale, 10, 10)
+        self.draw_cube(
+            Interval(-0.1/self.scale, 0.1/self.scale),
+            Interval(-0.1/self.scale, 0.1/self.scale),
+            Interval(-0.1/self.scale, 0.1/self.scale)
+        )
         glPopMatrix()
         glEnable(GL_DEPTH_TEST)
 
