@@ -102,7 +102,7 @@ class ImportPanel(wx.Panel):
         self.bounds = {}
         self.bounds_sliders = {}
         for i in ['imin','imax','jmin','jmax','kmin','kmax']:
-            s = wx.Slider(bpanel, name=i)
+            s = wx.Slider(bpanel, size=(100, 10), name=i)
             s.Bind(wx.EVT_SCROLL, lambda e, q=i: self.sync_text(q))
             self.bounds_sliders[i] = s
             bounds.Add(s, flag=wx.LEFT|wx.TOP, border=10)
