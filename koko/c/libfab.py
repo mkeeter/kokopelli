@@ -5,7 +5,9 @@ import os
 import sys
 
 # Here are a few likely filenames
-base = os.path.dirname(os.path.abspath(sys.argv[0]))
+base = os.path.abspath(sys.argv[0])
+if sys.argv[0]: base = os.path.dirname(base)
+
 libname = 'libfab' + ('.dylib' if 'Darwin' in os.uname() else '.so')
 filenames =[
     os.path.join(base, 'libfab/', libname),
