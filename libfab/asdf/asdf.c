@@ -96,46 +96,44 @@ ASDF* build_asdf(
         .Z = (Interval){region.Z[0], region.Z[region.nk]},
     };
 
-    // Evaluate across the interval if we've got a volume
-    Interval result;
-    if (region.voxels > 1) {
-        result = eval_i(tree, asdf->X, asdf->Y, asdf->Z);
+    // Decide if we should recurse down the tree
+    _Bool recurse = true;
+    if (region.voxels == 1) {
+        recurse = false;
+    } else {
+        const Interval result = eval_i(tree, asdf->X, asdf->Y, asdf->Z);
+        if (result.lower >= 0 || result.upper < 0) {
+            recurse = false;
+        }
     }
-    // Otherwise, evaluate the eight corners individually
-    else {
-        for (int n=0; n < 8; ++n)
+
+    // If this is a terminal cell, populate corners with sampled
+    // values and set an appropriate state.
+    if (!recurse) {
+        _Bool empty  = true;
+        _Bool filled = true;
+
+        for (int n=0; n < 8; ++n) {
             asdf->d[n] = eval_f(tree,
                 (n & 4) ? asdf->X.upper : asdf->X.lower,
                 (n & 2) ? asdf->Y.upper : asdf->Y.lower,
                 (n & 1) ? asdf->Z.upper : asdf->Z.lower);
 
-        // Construct a result interval from corner values
-        result = (Interval){asdf->d[0], asdf->d[0]};
-        for (int n=1; n < 8; ++n) {
-            result.lower = fmin(result.lower, asdf->d[n]);
-            result.upper = fmax(result.upper, asdf->d[n]);
+            if (asdf->d[n] < 0)     empty = false;
+            else                    filled = false;
         }
-    }
 
-    // If we get an unambiguous result, mark as filled or empty
-    if (result.upper < 0)
-        asdf->state = FILLED;
-    else if (result.lower >= 0)
-        asdf->state = EMPTY;
-    else if (region.voxels == 1) {
-        asdf->state = LEAF;
-    }
+        if (empty)          asdf->state = EMPTY;
+        else if (filled)    asdf->state = FILLED;
+        else                asdf->state = LEAF;
 
-    if (asdf->state != BRANCH) {
-        return asdf;
     } else {
-
         #if PRUNE
             disable_nodes(tree);
         #endif
 
         Region octants[8];
-        uint8_t bits = octsect_active(region, tree, octants);
+        const uint8_t bits = octsect_active(region, tree, octants);
 
         // If there's at least one active axis along which we can
         // split the system, then subdivide and recurse
