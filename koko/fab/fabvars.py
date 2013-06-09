@@ -30,14 +30,10 @@ class FabVars(object):
     def shape(self):    return self._shape
     @shape.setter
     def shape(self, value): self.shapes = [MathTree.wrap(value)]
-
-
     @property
-    def function(self):
-        raise TypeError('cad.function is deprecated in favor of cad.shape(s)')
+    def function(self): return self.shape
     @function.setter
-    def function(self, value):
-        raise TypeError('cad.function is deprecated in favor of cad.shape(s)')
+    def function(self, value):  self.shape = value
 
     @property
     def render_mode(self):

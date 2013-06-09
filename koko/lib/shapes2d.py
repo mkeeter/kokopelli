@@ -38,6 +38,11 @@ def triangle(x0, y0, x1, y1, x2, y2):
     s.shape = True
     return s
 
+def right_triangle(x0, y0, h):
+    corner = MathTree.max(MathTree('-f%fX' % x0),MathTree('-f%fY' % y0))
+    corner.shape = True
+    return corner & MathTree('-X-f%f-Yf%f' % (x0+h, y0))
+
 ################################################################################
 
 def rectangle(x0, x1, y0, y1):
@@ -94,6 +99,13 @@ def move(part, dx, dy, dz=0):
     if part.dz: p.zmin, p.zmax = part.zmin + dz, part.zmax + dz
 
     return p
+
+translate = move
+
+################################################################################
+
+add      = lambda x, y: x + y
+subtract = lambda x, y: x - y
 
 ################################################################################
 

@@ -42,7 +42,10 @@ def pyramid(x0, x1, y0, y1, z0, z1):
 
 ################################################################################
 
-move = s2d.move
+move        = s2d.move
+translate   = s2d.translate
+add         = s2d.add
+subtract    = s2d.subtract
 
 def rotate_x(part, angle):
 
