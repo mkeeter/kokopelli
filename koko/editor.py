@@ -122,6 +122,10 @@ class Editor(wx.py.editwindow.EditWindow):
             try:    exec(i, imported)
             except (SyntaxError, ImportError):  continue
 
+        for k in imported.keys():
+            if isinstance(imported[k], object):
+                imported[k] = imported[k].__init__
+
         # Filter the functions to only include those that are callable
         # and can be analyzed with inspect.
         for k in imported.keys():
