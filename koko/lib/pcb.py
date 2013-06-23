@@ -1,7 +1,8 @@
 import operator
-from math import cos, sin, atan2, radians, degrees
+from math import cos, sin, atan2, radians, degrees, sqrt
 
 import koko.lib.shapes2d as s2d
+from koko.lib.text import text
 
 class PCB(object):
     def __init__(self, x0, y0, width, height):
@@ -15,41 +16,80 @@ class PCB(object):
 
     @property
     def traces(self):
-        return (reduce(operator.add, [c.pads   for c in self.components]) +
-                reduce(operator.add, [c.traces for c in self.connections]))
+        return (reduce(operator.add, [c.pads   for c in self.components], None) +
+                reduce(operator.add, [c.traces for c in self.connections], None))
 
     def __iadd__(self, rhs):
-        if isintance(rhs, Component):
+        if isinstance(rhs, Component):
             self.components.append(rhs)
         elif isinstance(rhs, Connection):
             self.connections.append(rhs)
         else:
             raise TypeError("Invalid type for PCB addition (%s)" % type(rhs))
+        return self
+
+    def connect(self, p0, p1, width=0.008, H=False, V=False):
+        if not isinstance(p0, BoundPin) or not isinstance(p1, BoundPin):
+            raise TypeError('p0 and p1 must be BoundPin instances')
+        if H and V:
+            raise ValueError('H and V are mutually exclusive')
+
+        if H:
+            self.connections.append(
+                Connection(width, p0, Point(p1.x, p0.y), p1)
+            )
+        elif V:
+            self.connections.append(
+                Connection(width, p0, Point(p0.x, p1.y), p1)
+            )
+        else:
+            self.connections.append(
+                Connection(width, p0, p1)
+            )
+
+    def connectH(self, p0, p1, width=0.008):
+        ''' Connects a pair of pins, traveling first
+            horizontally then vertically
+        '''
+        return self.connect(p0, p1, width, H=True)
+
+    def connectV(self, p0, p1, width=0.008):
+        ''' Connects a pair of pins, traveling first
+            vertically then horizontally
+        '''
+        return self.connect(p0, p1, width, V=True)
+
+    def connectP(self, pts, width=0.008):
+        ''' Connects a list of points or pins '''
+        self.connections.append(
+            Connection(width, *pts)
+        )
 
 ################################################################################
 
 class Component(object):
     ''' Generic PCB component.
     '''
-    def __init__(self, x, y, rot=0, label=''):
+    def __init__(self, x, y, rot=0, name=''):
         ''' Constructs a Component object
                 x           X position
                 y           Y position
                 rotation    angle (degrees)
                 pins        List of Pin instances
-                label       String
+                name        String
         '''
         self.x = x
         self.y = y
-        self.label = label
         self.rot   = rot
 
-    def __index__(self, i):
+        self.name = name
+
+    def __getitem__(self, i):
         if isinstance(i, str):
             try:
-                pin = [p for p in self.pins if p.label == i][0]
+                pin = [p for p in self.pins if p.name == i][0]
             except IndexError:
-                raise IndexError("No pin with label %s" % i)
+                raise IndexError("No pin with name %s" % i)
         elif isinstance(i, int):
             try:
                 pin = self.pins[i]
@@ -62,16 +102,29 @@ class Component(object):
         pads = reduce(operator.add, [p.pad for p in self.pins])
         return s2d.move(s2d.rotate(pads, self.rot), self.x, self.y)
 
+    @property
+    def pin_labels(self):
+        L = []
+        for p in self.pins:
+            p = BoundPin(p, self)
+            if p.pin.name:
+                L.append(text(p.pin.name, self.x + p.x, self.y + p.y, 0.01))
+        return L
+
+    @property
+    def label(self):
+        return text(self.name, self.x, self.y)
+
 ################################################################################
 
 class Pin(object):
     ''' PCB pin, with name, shape, and position
     '''
-    def __init__(self, x, y, shape, label=''):
+    def __init__(self, x, y, shape, name=''):
         self.x      = x
         self.y      = y
         self.shape  = shape
-        self.label  = label
+        self.name   = name
 
     @property
     def pad(self):
@@ -89,14 +142,14 @@ class BoundPin(object):
 
     @property
     def x(self):
-        return (cos(radians(component.rot)) * self.pin.x -
-                sin(radians(component.rot)) * self.pin.y +
+        return (cos(radians(self.component.rot)) * self.pin.x -
+                sin(radians(self.component.rot)) * self.pin.y +
                 self.component.x)
 
     @property
     def y(self):
-        return (sin(radians(component.rot)) * self.pin.x +
-                cos(radians(component.rot)) * self.pin.y +
+        return (sin(radians(self.component.rot)) * self.pin.x +
+                cos(radians(self.component.rot)) * self.pin.y +
                 self.component.y)
 
 ################################################################################
@@ -107,6 +160,8 @@ class Point(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
+    def __iter__(self):
+        return iter([self.x, self.y])
 
 ################################################################################
 
@@ -125,9 +180,9 @@ class Connection(object):
         for p1, p2 in zip(self.points[:-1], self.points[1:]):
             d = sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
             if p2 != self.points[-1]:
-                d += width/2
+                d += self.width/2
             a = atan2(p2.y - p1.y, p2.x - p1.x)
-            r = s2d.rectangle(0, d, -width/2, width/2)
+            r = s2d.rectangle(0, d, -self.width/2, self.width/2)
             t.append(s2d.move(s2d.rotate(r, degrees(a)), p1.x, p1.y))
         return reduce(operator.add, t)
 
@@ -163,7 +218,7 @@ class USB_mini_B(Component):
     '''
     pins = [
         Pin(0.063,   0.36, _pad_USB_trace, 'G'),
-        Pin(0.0315,  0.36, _pad_USB_trace, ''),
+        Pin(0.0315,  0.36, _pad_USB_trace),
         Pin(0,       0.36, _pad_USB_trace, '+'),
         Pin(-0.0315, 0.36, _pad_USB_trace, '-'),
         Pin(-0.063,  0.36, _pad_USB_trace, 'V'),
