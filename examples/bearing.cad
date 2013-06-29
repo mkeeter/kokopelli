@@ -1,0 +1,51 @@
+"""
+examples/bearing.cad
+
+A simple bearing model.  Demonstrates multi-part objects:
+The balls and the bearing are two distinct models, which prevents
+them from being merged during triangulation.
+
+Based on the original bearing.cad:
+http://academy.cba.mit.edu/classes/scanning_printing/bearing.cad
+[Amy Sun & Neil Gershenfeld, 12/23/06]
+"""
+
+
+from koko.lib.shapes import *
+from math import sin, cos, pi
+
+################################################################################
+
+height = 0.3   # bearing height
+wall = 0.1     # wall thickness
+OD = 1.0       # outer diameter
+ID = 0.25      # inner diameter
+BD = 0.25      # bearing ball diameter
+Nb = 6         # Number of balls in bearing
+
+################################################################################
+
+# Make a 2D cross section, then revolve it to create the bearing's shape
+
+base = (
+    rectangle(ID/2, OD/2, -height/2, height/2) -
+    rectangle(ID/2 + wall, OD/2 - wall, -height, height)
+)
+
+R_r = (OD + ID) / 4
+race = rectangle(R_r - BD/2., R_r + BD/2., -height/6., height/6.)
+bearing = rotate_x(revolve_y(base - race), 90)
+
+
+################################################################################
+
+balls = [
+    sphere(cos(i*2*pi/Nb)*R_r, sin(i*2*pi/Nb)*R_r, 0, BD/2.)
+     for i in range(Nb)
+]
+
+################################################################################
+
+cutout = cube(0, 2, -2, 0, -2, 2)
+cad.shapes = balls + [bearing]
+cad.shapes = [s - cutout for s in cad.shapes]
