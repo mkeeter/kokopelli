@@ -1,0 +1,154 @@
+"""
+examples/gik.cad
+
+This example creates the Gershenfeld Invention Kit,
+a press-fit kit of parts intended to be made out of
+cardboard on a laser cutter.
+
+Based on the original gik.cad:
+http://academy.cba.mit.edu/classes/computer_cutting/gik.cad
+[Neil Gershenfeld, 8/1/07]
+
+Major modifications include moving from functions to overloaded
+operators, switching to new libraries, and using loops to duplicate
+parts (rather than doing so by hand).
+"""
+
+from koko.lib.shapes import *
+from math import sqrt
+
+################################################################################
+
+# Design parameters
+
+w = 0.13 # slot width
+l = 0.3 # slot length
+c = 0.03 # champher length
+s = .1 # part space
+
+################################################################################
+
+# We'll accumulate shapes in the 'gik' variable
+gik = None
+
+################################################################################
+
+x0 = 0
+
+slot = rectangle(0, l/2, -w/2, w/2)
+slot += right_triangle(0, w/2, c)
+slot += reflect_y(right_triangle(0, w/2, c))
+
+double_slot = rectangle(0, l+w/2, -w/2, w/2)
+double_slot += right_triangle(0, w/2, c)
+double_slot += reflect_y(right_triangle(0, w/2, c), 0)
+
+################################################################################
+
+square_gik = rectangle(-l-w/2, l+w/2, -l-w/2, l+w/2)
+square_gik -= move(slot, -l-w/2, 0)
+square_gik -= move(reflect_x(slot, 0), l+w/2, 0)
+square_gik -= move(reflect_xy(slot), 0, -l-w/2)
+square_gik -= move(reflect_xy(reflect_x(slot, 0)), 0, l+w/2)
+
+dxy = 2*l+w+s
+for i in range(2):
+    for j in range(4):
+        gik += move(square_gik, i*dxy, j*dxy)
+
+################################################################################
+
+pi_gik = rectangle(-l-w/2, l+w/2, -l-w/2, l+w/2)
+pi_gik -= move(slot, -l-w/2, 0)
+pi_gik -= move(reflect_x(slot, 0), l+w/2, 0)
+pi_gik -= move(reflect_xy(double_slot), 0, -l-w/2)
+
+dxy = 2*l + w + s
+x0 += 2*dxy
+
+for j in range(4):
+    gik += move(pi_gik, x0, j*dxy)
+
+################################################################################
+
+tee_gik = rectangle(-l-w/2, l+w/2, -l-w/2, 3*w/2)
+tee_gik -= move(slot, -l-w/2, 0)
+tee_gik -= move(reflect_x(slot, 0), l+w/2, 0)
+tee_gik -= move(reflect_xy(slot), 0, -l-w/2)
+
+dx = 2*l+w+s
+dy = l + s + 2*w
+
+x0 += dx
+for i in range(5):
+    gik += move(tee_gik, 3*dxy, i*dy)
+x0 += dx
+
+################################################################################
+
+corner_gik = rectangle(-l-w/2, 3*w/2, -l-w/2, 3*w/2)
+corner_gik -= move(slot, -l-w/2, 0)
+corner_gik -= move(reflect_xy(slot), 0, -l-w/2)
+
+dx = l + 2*w + s
+dy = l + s + 2*w
+
+for i in range(2):
+    for j in range(5):
+        gik += move(corner_gik, x0 + dx*i, j*dy)
+x0 += 2*dx
+
+################################################################################
+
+connector_gik = rectangle(-l, l, -3*w/2, 3*w/2)
+connector_gik -= move(slot, -l, 0)
+connector_gik -= move(reflect_x(slot, 0), l, 0)
+
+dy = 3*w+s
+for j in range(6):
+    gik += move(connector_gik, x0, j*dy)
+x0 += 2*l + s
+
+################################################################################
+
+r = l + w/(2*sqrt(3))
+round_gik = circle(0, 0, r)
+round_gik = round_gik - move(slot, -r, 0)
+round_gik = rotate(round_gik, 120) - move(slot, -r, 0)
+round_gik = rotate(round_gik, 120) - move(slot, -r, 0)
+
+round_gik_row = None
+x0 += s
+for j in range(3):
+    round_gik_row += move(round_gik, x0, j*(2*r+4*s))
+
+gik += round_gik_row
+
+################################################################################
+
+d = sqrt(3)*r
+h = sqrt(3)*d
+triangle_gik = triangle(-d, -r, 0, h-r, d, -r)
+triangle_gik -= move(reflect_xy(slot), 0, -r)
+triangle_gik = rotate(triangle_gik, 120) - move(reflect_xy(slot), 0, -r)
+triangle_gik = rotate(triangle_gik, 120) - move(reflect_xy(slot), 0, -r)
+inverted_triangle_gik = move(reflect_y(triangle_gik, 0), 0, h-2*r)
+
+x0 += r/2 + d + 4*s
+
+dx = d + s
+dy = h + s
+gik += move(triangle_gik, x0, 0)
+gik += move(inverted_triangle_gik, x0, dy)
+gik += move(triangle_gik, x0, 2*dy)
+gik += move(inverted_triangle_gik, x0+dx, 0)
+gik += move(triangle_gik, x0+dx, dy)
+gik += move(inverted_triangle_gik, x0+dx, 2*dy)
+
+################################################################################
+
+gik += move(round_gik_row, 4*dx + 2*s, 0)
+
+################################################################################
+
+cad.shape = gik
