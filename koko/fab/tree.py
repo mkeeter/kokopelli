@@ -59,7 +59,10 @@ class MathTree(object):
 
         ## @var math
         # Math string (in sparse prefix syntax)
-        self.math   = math
+        if type(math) in [int, float]:
+            self.math = 'f' + str(math)
+        else:
+            self.math   = math
 
         ## @var shape
         # Boolean modify the behavior of arithmetic operators
