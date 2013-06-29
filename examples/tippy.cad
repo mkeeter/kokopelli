@@ -1,0 +1,77 @@
+"""
+examples/tippy.cad
+
+Tippy-top molding and casting example
+
+Based on the original tippy.cad:
+http://academy.cba.mit.edu/classes//molding_casting/tippy.cad
+[Neil Gershenfeld, 10/19/10]
+
+We use the "MathTree(-1)" to create a filled world (since negative
+values are considered part of the object in our distance metric
+representation).  This means that the object's bounds have to be
+specified manually (rather than being automatically generated).
+
+"""
+
+from koko.lib.shapes import *
+
+#
+# dimensions
+#
+top_radius = 0.5
+top_wall = top_radius/4.0
+stem_radius = top_radius/5.0
+stem_height = top_radius/1.5
+stem_depth = stem_height
+mold_wall = 0.2
+x0 = 1.0
+y0 = 1.0
+
+################################################################################
+
+# define bottom
+bottom = MathTree(-1)
+bottom -= cylinder(0,0,-top_radius-2*mold_wall,10,top_radius+2*mold_wall)
+bottom += cylinder(0,0,-top_radius-2*mold_wall,-top_radius-mold_wall,top_radius+mold_wall)
+bottom += sphere(0,0,-top_radius-mold_wall,top_radius)
+
+# cutout to see interior (comment out for machining)
+bottom = subtract(bottom,cube(0,10,-10,0,-10,10))
+
+
+# move to location to machine
+bottom = move(bottom, x0+top_radius+2*mold_wall, y0+top_radius+2*mold_wall)
+
+################################################################################
+
+# define top
+top = MathTree(-1)
+top -= cylinder(0,0,-stem_height,10,top_radius+mold_wall)
+top -= sphere(0,0,-stem_height,top_radius-top_wall)
+top += cylinder(0,0,-10,10,stem_radius)
+top += cylinder(top_radius-top_wall/2.0,0,-10,10,top_wall/2.0)
+
+# cutout to see interior (comment out for machining)
+top -= cube(0,10,-10,0,-10,10)
+
+# move to location to machine
+top = move(top,x0+top_radius+mold_wall,y0+top_radius+mold_wall)
+
+################################################################################
+
+# select mold component to make
+part = bottom
+#part = top
+
+################################################################################
+
+# part bounds
+part.xmin = x0-mold_wall
+part.xmax = x0+2*top_radius+5*mold_wall
+part.ymin = y0-mold_wall
+part.ymax = y0+2*top_radius+5*mold_wall
+part.zmin = -top_radius-3*mold_wall
+part.zmax = 0
+
+cad.shape = part
