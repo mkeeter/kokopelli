@@ -31,5 +31,6 @@ This work may be reproduced, modified, distributed, performed, and displayed for
 
 Copyright
 =========
-(c) 2012-2013 Massachusetts Institute of Technology
+(c) 2012-2013 Massachusetts Institute of Technology  
+(c) 2013 Matt Keeter
 
