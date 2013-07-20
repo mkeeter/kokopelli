@@ -153,7 +153,7 @@ void simplify(ASDF* const asdf, const _Bool merge_leafs);
     of the split.
     @returns The upper cell of the split
 */
-ASDF* split_cell(ASDF* const asdf, const uint8_t axis);
+ASDF* split_cell(ASDF* const asdf, const ASDF* neighbor, const uint8_t axis);
 
 /** @brief Finds the number of voxels along each dimension
     @param ni Target for i voxel count

@@ -288,9 +288,18 @@ ASDF* _build_asdf_region(const float* const result, const Region region,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ASDF* split_cell(ASDF* const asdf, const uint8_t axis)
+ASDF* split_cell(ASDF* const asdf, const ASDF* neighbor, const uint8_t axis)
 {
     if (asdf == NULL)   return NULL;
+
+    while (!neighbor->branches[axis])
+    {
+        neighbor = neighbor->branches[0];
+    }
+    float new_pos;
+    if (axis == 4)      new_pos = neighbor->branches[0]->X.upper;
+    else if (axis == 2) new_pos = neighbor->branches[0]->Y.upper;
+    else if (axis == 1) new_pos = neighbor->branches[0]->Z.upper;
 
     ASDF* new = malloc(sizeof(ASDF));
     *new = (ASDF) {
@@ -303,9 +312,11 @@ ASDF* split_cell(ASDF* const asdf, const uint8_t axis)
     };
 
     // Adjust the lower bound of the split axis in the new cell
-    if (axis == 4)          new->X.lower = (asdf->X.lower + asdf->X.upper)/2;
-    else if (axis == 2)     new->Y.lower = (asdf->Y.lower + asdf->Y.upper)/2;
-    else if (axis == 1)     new->Z.lower = (asdf->Z.lower + asdf->Z.upper)/2;
+    if (axis == 4)          new->X.lower = new_pos;
+    else if (axis == 2)     new->Y.lower = new_pos;
+    else if (axis == 1)     new->Z.lower = new_pos;
+
+    printf("%g\n", new->Y.lower);
 
     // Find new distance samples with interpolation
     for (int i=0; i < 8; ++i) {
@@ -317,9 +328,9 @@ ASDF* split_cell(ASDF* const asdf, const uint8_t axis)
     }
 
     // Modify the upper bound of the split axis in the orignal cell
-    if (axis == 4)          asdf->X.upper = (asdf->X.lower + asdf->X.upper)/2;
-    else if (axis == 2)     asdf->Y.upper = (asdf->Y.lower + asdf->Y.upper)/2;
-    else if (axis == 1)     asdf->Z.upper = (asdf->Z.lower + asdf->Z.upper)/2;
+    if (axis == 4)          asdf->X.upper = new->X.lower;
+    else if (axis == 2)     asdf->Y.upper = new->Y.lower;
+    else if (axis == 1)     asdf->Z.upper = new->Z.lower;
 
     // Copy over the interpolated d values on the boundary
     for (int i=0; i < 8; ++i) {
@@ -337,7 +348,7 @@ ASDF* split_cell(ASDF* const asdf, const uint8_t axis)
                 new->branches[i] = asdf->branches[i|axis];
                 asdf->branches[i|axis] = NULL;
             } else {
-                new->branches[i] = split_cell(asdf->branches[i], axis);
+                new->branches[i] = split_cell(asdf->branches[i], neighbor, axis);
             }
         }
     }

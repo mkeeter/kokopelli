@@ -826,7 +826,9 @@ _Bool make_consistent(ASDF* const asdf, const ASDF* const neighbors[6])
                 for (int c=0; c < 8; ++c) {
                     if (c & new_split)  continue;
                     asdf->branches[c|new_split] =
-                        split_cell(asdf->branches[c], new_split);
+                        split_cell(
+                            asdf->branches[c], neighbors[f], new_split
+                        );
                 }
                 free_virtual_asdf((ASDF*)n);
                 n = get_neighbor_v(asdf, b, f, neighbors[f]);
