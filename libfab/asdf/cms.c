@@ -7,6 +7,8 @@ http://graphics.csie.ntu.edu.tw/CMS/
 #include <stdio.h>
 #include <stdbool.h>
 
+#include <assert.h>
+
 #include "asdf/asdf.h"
 #include "asdf/neighbors.h"
 #include "asdf/cms.h"
@@ -482,17 +484,26 @@ CMSpath* clone_merged_path(const ASDF* const asdf,
         // we're done with the path tracing.
         stack = pop(stack);
         while (stack) {
+            // If we can move into an adjacent cell, then do so.
             if ((stack->b & edge_axis) != edge_dir &&
                 stack->asdf->branches[stack->b^edge_axis])
             {
+                // Recurse down the asdf to find the lowest-level cell
                 ASDFstack* const new_stack = find_edge(
                     stack->asdf->branches[stack->b^edge_axis],
                     face, end->edge^1
                 );
-                ASDFstack* tmp = new_stack;
-                while (tmp->next)   tmp = tmp->next;
+
+                {   // Attach the old stack to the end of the new one
+                    ASDFstack* tmp = new_stack;
+                    while (tmp->next)   tmp = tmp->next;
+                    tmp->next = stack;
+                }
+
+                // Mark that we recursed down a different branch this time.
                 stack->b ^= edge_axis;
-                tmp->next = stack;
+
+                // And over-write the current stack.
                 stack = new_stack;
                 break;
             }
@@ -732,14 +743,35 @@ void merge_faces(ASDF* const asdf, const ASDF* const neighbors[6])
     if (asdf == NULL) {
         return;
     } else if (asdf->state == LEAF) {
+        // For every face and edge, attempt to clone it from
+        // our neighbours.  Since we're recursing down the tree,
+        // we'll automatically get multi-scale paths in clone_merged_path
         for (int f=0; f < 6; ++f) {
             for (int e=0; e < 4 && neighbors[f]; ++e) {
                 CMSpath* p = clone_merged_path(neighbors[f], f^1, e);
-                if (!p) continue;
+                if (p == NULL)  continue;
 
-                if ((p->edge <= 1) == (f <= 1)) p->edge ^= 1;
+                // Swap the edge (since the neighboring path is backwards)
+                if ((p->edge <= 1) == (f <= 1))     p->edge ^= 1;
+
+                // Save the ending edge for an assert check later
+                const uint8_t end = p->edge;
+
+                // Now reverse the path and swap the front edge.
                 p = reverse_path(p);
-                if ((p->edge <= 1) == (f <= 1))  p->edge ^= 1;
+                if ((p->edge <= 1) == (f <= 1))     p->edge ^= 1;
+
+                // Assert that this is a simple (one-segment) path.
+                assert(((Path4p)(asdf->data))[f][p->edge]->next != NULL &&
+                       ((Path4p)(asdf->data))[f][p->edge]->next->next == NULL);
+
+                // A bit tautological, but worth a check
+                assert(((Path4p)(asdf->data))[f][p->edge]->edge == p->edge);
+
+                // This is the important check: we need to make sure that we
+                // ended up on the same edge as before.
+                assert(((Path4p)(asdf->data))[f][p->edge]->next->edge == end);
+
                 free_cmspath(((Path4p)(asdf->data))[f][p->edge]);
                 ((Path4p)(asdf->data))[f][p->edge] = p;
             }
