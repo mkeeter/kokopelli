@@ -413,9 +413,10 @@ int can_merge(const ASDF* const asdf, const uint8_t axis)
                     B->X.upper, B->Y.upper, B->Z.upper
                 );
 
-                // If this corner can't be reconstructed accurately,
-                // don't merge it.
-                if (fabs(distance - A->d[c]) > EPSILON) return false;
+                // If this corner can't be reconstructed accurately or the
+                // interpolated result, has the wrong sign, don't do it.
+                if (fabs(distance - A->d[c]) > EPSILON)     return false;
+                if ((distance < 0) != (A->d[c] < 0))        return false;
             }
             result |= MERGE_LEAF;
         }
