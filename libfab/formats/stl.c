@@ -66,6 +66,8 @@ Mesh* load_stl(const char* filename)
         mesh->tdata[t*3 + 2] = t*3 + 2;
     }
 
+    fclose(input);
+
     return mesh;
 }
 

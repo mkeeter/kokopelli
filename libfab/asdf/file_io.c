@@ -119,6 +119,7 @@ ASDF* asdf_read(const char* filename)
     char f = fgetc(file);
     if (a != 'A' || s != 'S' || d != 'D' || f != 'F') {
         printf("Error: did not recognize .asdf file\n");
+        fclose(file);
         return NULL;
     }
 
