@@ -89,7 +89,7 @@ void write_edges(
 
     if (asdf->state == LEAF) {
         for (int e=0; e < 4; ++e) {
-            Path* p = ((Path**)(asdf->data))[e];
+            Path* p = asdf->data.contour[e];
             if (!p) continue;
 
             // Grab the path and trace it out
@@ -133,7 +133,7 @@ void find_edges(
 
         // Upgrade disconnected edges from children
         // (necessary for multi-scale path merging; trust me on this)
-        asdf->data = calloc(4, sizeof(Path*));
+        asdf->data.contour = calloc(4, sizeof(Path*));
 
         for (int e=0; e < 4; ++e) {
 
@@ -148,25 +148,25 @@ void find_edges(
                 // If we've already filled this edge or
                 // this cell doesn't exist or doesn't have data,
                 // or doesn't have data on this edge, then skip it.
-                if (((Path**)(asdf->data))[e] ||
+                if (asdf->data.contour[e] ||
                     !asdf->branches[i] ||
-                    !asdf->branches[i]->data ||
-                    !((Path**)(asdf->branches[i]->data))[e])
+                    !asdf->branches[i]->data.contour ||
+                    !asdf->branches[i]->data.contour[e])
                 {
                     continue;
                 }
 
                 // If this edge has a loose end, upgrade it
-                Path* p = ((Path**)(asdf->branches[i]->data))[e];
+                Path* p = asdf->branches[i]->data.contour[e];
 
-                ((Path**)(asdf->data))[e] = p;
+                asdf->data.contour[e] = p;
 
                 // Add a pointer so that this path can disconnect
                 // itself from the grid when needed
                 p->ptrs = realloc(
                     p->ptrs, sizeof(Path**)*(++p->ptr_count)
                 );
-                p->ptrs[p->ptr_count-1] = &((Path**)asdf->data)[e];
+                p->ptrs[p->ptr_count-1] = &(asdf->data.contour[e]);
 
             }
         }
@@ -178,8 +178,8 @@ _STATIC_
 void evaluate_pixel(
     ASDF* const leaf, const ASDF* const neighbors[4])
 {
-    if (!leaf->data) {
-        leaf->data = calloc(4, sizeof(Path*));
+    if (!leaf->data.contour) {
+        leaf->data.contour = calloc(4, sizeof(Path*));
     }
 
     // Figure out which of the 16 possible cases we've encountered.
@@ -221,24 +221,24 @@ Path* contour_zero_crossing(
     // Neighbors are in the order -y, +y, -x, +x
 
     // Lower edge
-    if (edge == 0 && neighbors[0] && neighbors[0]->data) {
-        t = ((Path**)(neighbors[0]->data))[1];
+    if (edge == 0 && neighbors[0] && neighbors[0]->data.contour) {
+        t = neighbors[0]->data.contour[1];
     // Upper edge
-    } else if (edge == 1 && neighbors[1] && neighbors[1]->data) {
-        t = ((Path**)(neighbors[1]->data))[0];
+    } else if (edge == 1 && neighbors[1] && neighbors[1]->data.contour) {
+        t = neighbors[1]->data.contour[0];
     // Left edge
-    } else if (edge == 2 && neighbors[2] && neighbors[2]->data) {
-        t = ((Path**)(neighbors[2]->data))[3];
+    } else if (edge == 2 && neighbors[2] && neighbors[2]->data.contour) {
+        t = neighbors[2]->data.contour[3];
     // Right edge
-    } else if (edge == 3 && neighbors[3] && neighbors[3]->data) {
-        t = ((Path**)(neighbors[3]->data))[2];
+    } else if (edge == 3 && neighbors[3] && neighbors[3]->data.contour) {
+        t = neighbors[3]->data.contour[2];
     }
 
     // If we've found one, then we're done.
     if (t) {
-        ((Path**)leaf->data)[edge] = t;
+        leaf->data.contour[edge] = t;
         t->ptrs = realloc(t->ptrs, sizeof(Path**)*(++t->ptr_count));
-        t->ptrs[t->ptr_count-1] = &((Path**)leaf->data)[edge];
+        t->ptrs[t->ptr_count-1] = &(leaf->data.contour[edge]);
         return t;
     }
 
@@ -270,11 +270,11 @@ Path* contour_zero_crossing(
         .x=c.x, .y=c.y, .z=0,
         .ptrs=malloc(sizeof(Path**)), .ptr_count=1
     };
-    ((Path**)leaf->data)[edge] = t;
+    leaf->data.contour[edge] = t;
 
     // Add a back-reference to the containing ASDF's edge pointer
     // (so that the path can disconnect itself when needed)
-    t->ptrs[0] = &((Path**)leaf->data)[edge];
+    t->ptrs[0] = &(leaf->data.contour[edge]);
 
     return t;
 }

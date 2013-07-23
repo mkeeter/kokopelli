@@ -11,6 +11,9 @@
 struct PackedTree_;
 struct Corner_;
 
+struct Path_;
+struct CMSpath_;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum ASDFstate { FILLED, EMPTY, BRANCH, LEAF, VIRTUAL };
@@ -43,7 +46,12 @@ typedef struct ASDF_ {
 
     /** @var data
         Pointer to situation-dependent data */
-    void* data;
+    union {
+        void* vp;
+        struct CMSpath_* (*cms)[4];
+        uint32_t* tri;
+        struct Path_** contour;
+    } data;
 } ASDF;
 
 

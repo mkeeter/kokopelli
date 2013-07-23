@@ -311,7 +311,7 @@ ASDF* split_cell(ASDF* const asdf, const ASDF* neighbor, const uint8_t axis)
        .Y=(Interval){asdf->Y.lower, asdf->Y.upper},
        .Z=(Interval){asdf->Z.lower, asdf->Z.upper},
        .branches = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
-       .data = NULL
+       .data = {.vp = NULL}
     };
 
     // Adjust the lower bound of the split axis in the new cell
@@ -653,8 +653,8 @@ void free_data(ASDF* const asdf)
 {
     if (!asdf)  return;
 
-    free(asdf->data);
-    asdf->data = NULL;
+    free(asdf->data.vp);
+    asdf->data.vp = NULL;
 
     for (int i=0; i < 8; ++i)   free_data(asdf->branches[i]);
 }

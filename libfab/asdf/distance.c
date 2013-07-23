@@ -192,7 +192,7 @@ _Bool make_D_asdf(
             .Z = (Interval){r.Z[0], r.Z[r.nk]},
             .branches = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
             .d = {0,0,0,0,0,0,0,0},
-            .data = NULL
+            .data = {.vp = NULL}
         };
     }
 
@@ -279,7 +279,7 @@ _Bool make_g_asdf(
             .Z = (Interval){r.Z[0], r.Z[r.nk]},
             .branches = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL},
             .d = {0,0,0,0,0,0,0,0},
-            .data = NULL
+            .data = {.vp = NULL}
         };
     }
 

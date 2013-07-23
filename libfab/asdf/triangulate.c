@@ -53,14 +53,14 @@ uint32_t mesh_zero_crossing(ASDF* const leaf,
                             Mesh* const mesh)
 {
 
-    if (!leaf->data) {
-        leaf->data = calloc(64, sizeof(uint32_t));
+    if (!leaf->data.tri) {
+        leaf->data.tri = calloc(64, sizeof(uint32_t));
     }
 
     // If we've already solved for this zero crossing then return
     // the appropriate vertex id
-    if (((uint32_t*)leaf->data)[(v0<<3)|v1]) {
-        return ((uint32_t*)leaf->data)[(v0<<3)|v1] - 1;
+    if (leaf->data.tri[(v0<<3)|v1]) {
+        return leaf->data.tri[(v0<<3)|v1] - 1;
     }
 
     // First, look up this edge in our neighbors to see if we
@@ -80,18 +80,18 @@ uint32_t mesh_zero_crossing(ASDF* const leaf,
         const ASDF* neighbor = neighbors[axis*2 + ((v0 & mask) ? 1 : 0)];
         // If we don't have this neighbor or this neighbor doesn't have
         // a vertex cache, then keep going.
-        if (!neighbor || !neighbor->data)  continue;
+        if (!neighbor || !neighbor->data.tri)  continue;
 
         // Look up this vertex in the neighbor's edge cache
         uint16_t index = ((v0 ^ mask)<<3) | (v1 ^ mask);
         // If we don't find it, keep going
-        if (!((uint32_t*)neighbor->data)[index]) continue;
+        if (!neighbor->data.tri[index]) continue;
 
         // We found the vertex!  Save it in the id variable.
         found = true;
-        id = ((uint32_t*)neighbor->data)[index] - 1;
-        ((uint32_t*)leaf->data)[(v0 << 3)|v1] = id + 1;
-        ((uint32_t*)leaf->data)[(v1 << 3)|v0] = id + 1;
+        id = neighbor->data.tri[index] - 1;
+        leaf->data.tri[(v0 << 3)|v1] = id + 1;
+        leaf->data.tri[(v1 << 3)|v0] = id + 1;
     }
 
     // If we didn't find a match among neighbors, solve for the
@@ -101,8 +101,8 @@ uint32_t mesh_zero_crossing(ASDF* const leaf,
         Vec3f c = asdf_zero_crossing(leaf, v0, v1);
 
         id = mesh->vcount;
-        ((uint32_t*)leaf->data)[(v0<<3)|v1] = id+1;
-        ((uint32_t*)leaf->data)[(v1<<3)|v0] = id+1;
+        leaf->data.tri[(v0<<3)|v1] = id+1;
+        leaf->data.tri[(v1<<3)|v0] = id+1;
 
         // Allocate more space if we need it to store this vertex.
         mesh_reserve_v(mesh, mesh->vcount+1);

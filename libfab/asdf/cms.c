@@ -359,7 +359,7 @@ ASDFstack* find_edge(const ASDF* const asdf,
     // construct a stack with the leaf as the top node and
     // return.
     if (asdf->state == LEAF) {
-        if ( ((Path4p)(asdf->data))[face][edge] ) {
+        if (asdf->data.cms[face][edge]) {
             ASDFstack* stack = calloc(1, sizeof(ASDFstack));
             stack->asdf = asdf;
             return stack;
@@ -459,7 +459,7 @@ CMSpath* clone_merged_path(const ASDF* const asdf,
     while (stack) {
 
         CMSpath* segment = clone_path(
-            ((Path4p)(stack->asdf->data))[face][ce]
+            stack->asdf->data.cms[face][ce]
         );
 
         if (!path) {
@@ -523,12 +523,12 @@ CMSpath* clone_merged_path(const ASDF* const asdf,
 _STATIC_
 void gen_cube(ASDF* const asdf)
 {
-    asdf->data = calloc(6, sizeof(CMSpath*)*4);
+    asdf->data.cms = calloc(6, sizeof(CMSpath*)*4);
 
     // Iterate over each face in this model, finding contours.
     for (int f=0; f < 6; ++f) {
 
-        CMSpath** my_face = ((Path4p)(asdf->data))[f];
+        CMSpath** my_face = asdf->data.cms[f];
 
         // Get corner positions and distance samples
         float d[4];
@@ -576,19 +576,19 @@ void link_loop(ASDF* const asdf, const uint8_t f, const uint8_t e)
     uint8_t ce = e;
 
     // Only trace a valid loop.
-    CMSpath* const loop_start = ((Path4p)(asdf->data))[cf][ce];
+    CMSpath* const loop_start = asdf->data.cms[cf][ce];
     if (loop_start == NULL) return;
 
     do {
         // Get the path on this particular face
-        CMSpath* p = ((Path4p)(asdf->data))[cf][ce];
+        CMSpath* p = asdf->data.cms[cf][ce];
 
         // If we're continuing around the loop, then disconnect
         // this path and merge it with the last point in the previous
         // path (welding the vertex and modifying the pointers)
         if (prev != NULL) {
             // Disconnect from asdf data
-            ((Path4p)(asdf->data))[cf][ce] = NULL;
+            asdf->data.cms[cf][ce] = NULL;
             link_paths(prev, p);
         }
 
@@ -673,8 +673,8 @@ void triangulate_loop(ASDF* const asdf,
         const uint8_t f, const uint8_t e, Mesh* const mesh)
 {
     // Extract the loop
-    CMSpath* const path_start = ((Path4p)(asdf->data))[f][e];
-    ((Path4p)(asdf->data))[f][e] = NULL;
+    CMSpath* const path_start = asdf->data.cms[f][e];
+    asdf->data.cms[f][e] = NULL;
 
     // Trace the loop, keeping track of the average vertex position
     CMSpath* p = path_start;
@@ -762,18 +762,18 @@ void merge_faces(ASDF* const asdf, const ASDF* const neighbors[6])
                 if ((p->edge <= 1) == (f <= 1))     p->edge ^= 1;
 
                 // Assert that this is a simple (one-segment) path.
-                assert(((Path4p)(asdf->data))[f][p->edge]->next != NULL &&
-                       ((Path4p)(asdf->data))[f][p->edge]->next->next == NULL);
+                assert(asdf->data.cms[f][p->edge]->next != NULL &&
+                       asdf->data.cms[f][p->edge]->next->next == NULL);
 
                 // A bit tautological, but worth a check
-                assert(((Path4p)(asdf->data))[f][p->edge]->edge == p->edge);
+                assert(asdf->data.cms[f][p->edge]->edge == p->edge);
 
                 // This is the important check: we need to make sure that we
                 // ended up on the same edge as before.
-                assert(((Path4p)(asdf->data))[f][p->edge]->next->edge == end);
+                assert(asdf->data.cms[f][p->edge]->next->edge == end);
 
-                free_cmspath(((Path4p)(asdf->data))[f][p->edge]);
-                ((Path4p)(asdf->data))[f][p->edge] = p;
+                free_cmspath(asdf->data.cms[f][p->edge]);
+                asdf->data.cms[f][p->edge] = p;
             }
         }
     } else if (asdf->state == BRANCH) {
@@ -858,7 +858,7 @@ void record_normals(ASDF* const asdf)
     if (asdf->state == LEAF) {
         for (int f=0; f < 6; ++f) {
             for (int e=0; e < 4; ++e) {
-                CMSpath* p = ((Path4p)(asdf->data))[f][e];
+                CMSpath* p = asdf->data.cms[f][e];
                 if (!p) continue;
                 while (p) {
                     Vec3f g = asdf_gradient(
