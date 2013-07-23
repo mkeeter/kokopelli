@@ -176,7 +176,6 @@ class PathPanel(FabPanel):
 
             L = img.threshold(z)
             L.array *= 100
-            L.save('test%i.png' % i)
 
             if last_image is not None and L == last_image:
                 paths = [p.copy() for p in last_paths]
@@ -460,7 +459,6 @@ class MultiPathPanel(FabPanel):
             img = asdf.render_multi(
                 resolution=values['res'], alpha=a, beta=b
             )[0]
-            img.save('test%s.png' % axis)
 
             # Find transformed ADSF bounds
             bounds = asdf.bounds(a, b)
