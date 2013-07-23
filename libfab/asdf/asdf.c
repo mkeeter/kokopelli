@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 #include "asdf/asdf.h"
 #include "asdf/cache.h"
@@ -292,6 +293,8 @@ ASDF* split_cell(ASDF* const asdf, const ASDF* neighbor, const uint8_t axis)
 {
     if (asdf == NULL)   return NULL;
 
+    assert(axis == 4 || axis == 2 || axis == 1);
+
     while (!neighbor->branches[axis])
     {
         neighbor = neighbor->branches[0];
@@ -299,7 +302,7 @@ ASDF* split_cell(ASDF* const asdf, const ASDF* neighbor, const uint8_t axis)
     float new_pos;
     if (axis == 4)      new_pos = neighbor->branches[0]->X.upper;
     else if (axis == 2) new_pos = neighbor->branches[0]->Y.upper;
-    else if (axis == 1) new_pos = neighbor->branches[0]->Z.upper;
+    else                new_pos = neighbor->branches[0]->Z.upper;
 
     ASDF* new = malloc(sizeof(ASDF));
     *new = (ASDF) {
@@ -315,8 +318,6 @@ ASDF* split_cell(ASDF* const asdf, const ASDF* neighbor, const uint8_t axis)
     if (axis == 4)          new->X.lower = new_pos;
     else if (axis == 2)     new->Y.lower = new_pos;
     else if (axis == 1)     new->Z.lower = new_pos;
-
-    printf("%g\n", new->Y.lower);
 
     // Find new distance samples with interpolation
     for (int i=0; i < 8; ++i) {
