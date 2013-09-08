@@ -103,7 +103,7 @@ class ModelaOutput(OutputPanel):
 
 
     def move(self, event=None):
-        values = self.get_values('xmin','ymin')
+        values = self.get_values(('xmin','ymin'))
         if not values:  return False
 
         x, y = values['xmin'], values['ymin']
