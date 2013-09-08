@@ -33,7 +33,7 @@ class PCB(object):
         if labels:
             T = []
             if self.pin_labels:
-                T.append(s2d.color(self.pin_labels, (255, 0, 0)))
+                T.append(s2d.color(self.pin_labels, (255, 90, 60)))
             if self.part_labels:
                 T.append(s2d.color(self.part_labels, (20, 200, 20)))
             if self.traces:
