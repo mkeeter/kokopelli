@@ -237,7 +237,7 @@ class App(wx.App):
         """
 
         # Open a file dialog to get target
-        df = dialogs.save_as(self.directory, extension='.cad')
+        df = dialogs.save_as(self.directory, extension='.ko')
 
         if df[1] != '':
             self.directory, self.filename = df
@@ -271,7 +271,7 @@ class App(wx.App):
 
         path = os.path.join(self.directory, self.filename)
 
-        if path[-4:] == '.cad':
+        if path[-3:] == '.ko' or path[-4:] == '.cad':
             with open(path, 'r') as f:
                 text = f.read()
                 if text.split('\n')[0] == '##    Geometry header    ##':
@@ -279,7 +279,13 @@ class App(wx.App):
                     koko.PRIMS.undo_stack = [koko.PRIMS.reconstructor()]
                     text = '\n'.join(text.split('\n')[3:])
             koko.EDITOR.text = text
-            koko.FRAME.status = 'Loaded .cad file'
+            koko.FRAME.status = 'Loaded design file'
+
+            if path[-4:] == '.cad':
+                dialogs.warning("""
+This file has a '.cad' extension, which was superceded by '.ko'.  It may use deprecated features or syntax.
+
+If it is an example file, the 'kokopelli/examples' folder may include an updated version with a '.ko' extension""")
 
             self.mode = 'cad'
             self.first_render = True
