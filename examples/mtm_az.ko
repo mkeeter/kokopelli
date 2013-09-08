@@ -1,5 +1,5 @@
 """
-examples/mtm_az.cad
+examples/mtm_az.ko
 
 This example implements Jonathan Ward's MTM AZ PCB mill,
 documented online at http://mtm.cba.mit.edu/machines/mtm_az/

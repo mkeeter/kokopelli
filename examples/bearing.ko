@@ -1,5 +1,5 @@
 """
-examples/bearing.cad
+examples/bearing.ko
 
 A simple bearing model.  Demonstrates multi-part objects:
 The balls and the bearing are two distinct models, which prevents

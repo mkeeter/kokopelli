@@ -2,7 +2,7 @@
 [(koko.prims.utils.Slider, {'name': 'N', 'min': '12', 'max': '24', 'value': '17', 'y': '3.37806648161', 'x': '-0.0986350465531', 'size': '3.0'}),(koko.prims.utils.Slider, {'name': 'T', 'min': '0.05', 'max': '0.2', 'value': '0.075', 'y': '3.05176854553', 'x': '-0.0872853625212', 'size': '3'})]
 ##    End of geometry header    ##
 """
-examples/mandala.cad
+examples/mandala.ko
 
 Demonstrates an intricate pattern parameterized by a pair of
 interactive sliders.

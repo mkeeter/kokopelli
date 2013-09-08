@@ -1,5 +1,5 @@
 """
-examples/gear.cad
+examples/gear.ko
 
 This example creates an involute gear with user-defined
 pressure angle, diametral pitch, and number of teeth.
