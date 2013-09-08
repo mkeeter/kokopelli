@@ -16,8 +16,31 @@ class PCB(object):
 
     @property
     def traces(self):
-        return (reduce(operator.add, [c.pads   for c in self.components], None) +
-                reduce(operator.add, [c.traces for c in self.connections], None))
+        L = [c.pads for c in self.components] + [c.traces for c in self.connections]
+        return reduce(operator.add, L) if L else None
+
+    @property
+    def part_labels(self):
+        L = [c.label for c in self.components if c.label is not None]
+        return reduce(operator.add, L) if L else None
+
+    @property
+    def pin_labels(self):
+        L = [c.pin_labels for c in self.components if c.pin_labels is not None]
+        return reduce(operator.add, L) if L else None
+
+    def shapes(self, labels=True):
+        if labels:
+            T = []
+            if self.pin_labels:
+                T.append(s2d.color(self.pin_labels, (255, 0, 0)))
+            if self.part_labels:
+                T.append(s2d.color(self.part_labels, (20, 200, 20)))
+            if self.traces:
+                T.append(s2d.color(self.traces, (125, 90, 60)))
+            return T
+        else:
+            return self.traces,
 
     def __iadd__(self, rhs):
         if isinstance(rhs, Component):
@@ -28,42 +51,35 @@ class PCB(object):
             raise TypeError("Invalid type for PCB addition (%s)" % type(rhs))
         return self
 
-    def connect(self, p0, p1, width=0.008, H=False, V=False):
-        if not isinstance(p0, BoundPin) or not isinstance(p1, BoundPin):
-            raise TypeError('p0 and p1 must be BoundPin instances')
-        if H and V:
-            raise ValueError('H and V are mutually exclusive')
-
-        if H:
-            self.connections.append(
-                Connection(width, p0, Point(p1.x, p0.y), p1)
-            )
-        elif V:
-            self.connections.append(
-                Connection(width, p0, Point(p0.x, p1.y), p1)
-            )
-        else:
-            self.connections.append(
-                Connection(width, p0, p1)
-            )
-
-    def connectH(self, p0, p1, width=0.008):
-        ''' Connects a pair of pins, traveling first
+    def connectH(self, *args, **kwargs):
+        ''' Connects a set of pins or points, traveling first
             horizontally then vertically
         '''
-        return self.connect(p0, p1, width, H=True)
+        width = kwargs['width'] if 'width' in kwargs else 0.008
+        points = []
+        for A, B in zip(args[:-1], args[1:]):
+            if not isinstance(A, BoundPin):     A = Point(*A)
+            if not isinstance(B, BoundPin):     B = Point(*B)
+            points.append(A)
+            if (A.x != B.x):
+                points.append(Point(B.x, A.y))
+        points.append(B)
+        self.connections.append(Connection(width, *points))
 
-    def connectV(self, p0, p1, width=0.008):
-        ''' Connects a pair of pins, traveling first
-            vertically then horizontally
+    def connectV(self, *args, **kwargs):
+        ''' Connects a set of pins or points, travelling first
+            vertically then horizontally.
         '''
-        return self.connect(p0, p1, width, V=True)
-
-    def connectP(self, pts, width=0.008):
-        ''' Connects a list of points or pins '''
-        self.connections.append(
-            Connection(width, *pts)
-        )
+        width = kwargs['width'] if 'width' in kwargs else 0.008
+        points = []
+        for A, B in zip(args[:-1], args[1:]):
+            if not isinstance(A, BoundPin):     A = Point(*A)
+            if not isinstance(B, BoundPin):     B = Point(*B)
+            points.append(A)
+            if (A.y != B.y):
+                points.append(Point(A.x, B.y))
+        points.append(B)
+        self.connections.append(Connection(width, *points))
 
 ################################################################################
 
@@ -75,7 +91,6 @@ class Component(object):
                 x           X position
                 y           Y position
                 rotation    angle (degrees)
-                pins        List of Pin instances
                 name        String
         '''
         self.x = x
@@ -92,7 +107,7 @@ class Component(object):
                 raise IndexError("No pin with name %s" % i)
         elif isinstance(i, int):
             try:
-                pin = self.pins[i]
+                pin = self.pins[i-1]
             except IndexError:
                 raise IndexError("Pin %i is not in array" %i)
         return BoundPin(pin, self)
@@ -108,12 +123,12 @@ class Component(object):
         for p in self.pins:
             p = BoundPin(p, self)
             if p.pin.name:
-                L.append(text(p.pin.name, self.x + p.x, self.y + p.y, 0.01))
-        return L
+                L.append(text(p.pin.name, p.x, p.y, 0.03))
+        return reduce(operator.add, L) if L else None
 
     @property
     def label(self):
-        return text(self.name, self.x, self.y)
+        return text(self.name, self.x, self.y, 0.05)
 
 ################################################################################
 
@@ -330,7 +345,8 @@ class ATtiny44_SOIC(Component):
     pins = []
     y = 0.15
     for t in ['VCC', 'PB0', 'PB1', 'PB3', 'PB2', 'PA7', 'PA6']:
-        pins.append(Pin(-0.12, y, _pad_SOIC, t))
+        pad = _pad_SOIC + s2d.circle(-0.041, 0, 0.015) if t == 'VCC' else _pad_SOIC
+        pins.append(Pin(-0.12, y, pad, t))
         y -= 0.05
     for t in ['PA5', 'PA4', 'PA3', 'PA2', 'PA1', 'PA0', 'GND']:
         y += 0.05
