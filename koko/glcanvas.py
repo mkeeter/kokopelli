@@ -1,4 +1,5 @@
 import  sys
+import  os
 from    math import pi, degrees
 import  operator
 
@@ -34,10 +35,21 @@ class DragHandler(object):
 
 class GLCanvas(glcanvas.GLCanvas):
     def __init__(self, parent, size=(500, 300)):
-        glcanvas.GLCanvas.__init__(
-            self, parent, wx.ID_ANY, size=size,
-            style=glcanvas.WX_GL_DOUBLEBUFFER
-        )
+        if 'Linux' in os.uname():
+            glcanvas.GLCanvas.__init__(
+                self, parent, wx.ID_ANY, size=size,
+                attribList=[glcanvas.WX_GL_DOUBLEBUFFER,
+                            glcanvas.WX_GL_RGBA,
+                            glcanvas.WX_GL_DEPTH_SIZE, 32]
+            )
+        elif 'Darwin' in os.uname():
+            glcanvas.GLCanvas.__init__(
+                self, parent, wx.ID_ANY, size=size,
+                style=glcanvas.WX_GL_DOUBLEBUFFER
+            )
+        else:
+            raise Exception('kokopelli does not know how to initialize GLCanvas on this operating system')
+
         self.context = glcanvas.GLContext(self)
         self.init = False
 
