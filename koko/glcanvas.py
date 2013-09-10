@@ -34,14 +34,14 @@ class DragHandler(object):
 ################################################################################
 
 class GLCanvas(glcanvas.GLCanvas):
-    def __init__(self, parent, size=(500, 300)):
+    def __init__(self, parent, size=(500, 300), depth=32):
         if 'Linux' in os.uname():
             glcanvas.GLCanvas.__init__(
                 self, parent, wx.ID_ANY, size=size,
                 attribList=[glcanvas.WX_GL_DOUBLEBUFFER,
                             glcanvas.WX_GL_RGBA,
-                            glcanvas.WX_GL_DEPTH_SIZE, 32]
-            )
+                            glcanvas.WX_GL_DEPTH_SIZE, depth]
+	    )
         elif 'Darwin' in os.uname():
             glcanvas.GLCanvas.__init__(
                 self, parent, wx.ID_ANY, size=size,

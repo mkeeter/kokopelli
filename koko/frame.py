@@ -80,7 +80,16 @@ class MainFrame(wx.Frame):
 
         koko.CANVAS = Canvas(self, app, size=(300, 300))
         canvas_sizer.Add(koko.CANVAS, proportion=1, flag=wx.EXPAND)
-        koko.GLCANVAS = GLCanvas(self, size=(300, 300))
+
+        # wx.glcanvas is terrible on wx-gtk.  The command to check whether
+        # various attributes are supported doesn't actually work, so we'll do
+        # it experimentally: try to construct a GLCanvas with various
+        # depth buffer sizes, stopping when one of them works.
+        for d in [32, 24, 16, 8]:
+            try:    koko.GLCANVAS = GLCanvas(self, size=(300, 300), depth=d)
+            except: continue
+            else:   break
+
         canvas_sizer.Add(koko.GLCANVAS, proportion=1, flag=wx.EXPAND)
         koko.GLCANVAS.Hide()
 
