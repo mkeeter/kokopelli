@@ -256,9 +256,9 @@ class GLCanvas(glcanvas.GLCanvas):
             uniform vec4 color;
 
             void main() {
-                gl_FragColor = vec4(0.1+0.9*normal[2]*color[0],
-                                    0.1+0.9*normal[2]*color[1],
-                                    0.1+0.9*normal[2]*color[2],
+                gl_FragColor = vec4(0.1 + 0.9*normal[2]*color[0],
+                                    0.1 + 0.9*normal[2]*color[1],
+                                    0.1 + 0.9*normal[2]*color[2],
                                     color[3]);
             }
         """
@@ -270,7 +270,7 @@ class GLCanvas(glcanvas.GLCanvas):
             uniform vec4 color;
 
             void main() {
-                float B = normal[2] < 0 ? 0.2 : normal[2]*0.8+0.2;
+                float B = normal[2] < 0.0 ? 0.2 : normal[2]*0.8+0.2;
                 gl_FragColor = vec4(B*color[0], B*color[1], B*color[2], color[3]);
             }
         """
@@ -280,9 +280,9 @@ class GLCanvas(glcanvas.GLCanvas):
             varying vec3 normal;
 
             void main() {
-                gl_FragColor = vec4(normal[0]/2+0.5,
-                                    normal[1]/2+0.5,
-                                    normal[2]/2+0.5, 1 );
+                gl_FragColor = vec4(normal[0]/2 + 0.5,
+                                    normal[1]/2 + 0.5,
+                                    normal[2]/2 + 0.5, 1.0);
             }
         """
 
@@ -342,13 +342,13 @@ class GLCanvas(glcanvas.GLCanvas):
             uniform int show_traverses;
 
             void main() {
-                if (color == 0)
+                if (color == 0.0)
                     gl_FragColor = vec4(0.9, 0.2, 0.2,
-                                        show_traverses > 0 ? 0.5 : 0);
+                                        show_traverses > 0.0 ? 0.5 : 0.0);
                 else
-                    gl_FragColor = vec4(0.3*color+0.2,
-                                        0.8*color+0.2,
-                                        (1-color),
+                    gl_FragColor = vec4(0.3*color + 0.2,
+                                        0.8*color + 0.2,
+                                        1.0 - color,
                                         0.9);
             }
         """
@@ -380,10 +380,10 @@ class GLCanvas(glcanvas.GLCanvas):
             void main()
             {
                 vec4 color = texture2D(texture, texcoord);
-                if (color[0] != 0 || color[1] != 0 || color[2] != 0)
+                if (color[0] != 0.0 || color[1] != 0.0 || color[2] != 0.0)
                     gl_FragColor = color;
                 else
-                    gl_FragColor = vec4(0, 0, 0, 0);
+                    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
             }
         """
         self.image_shader = shaders.compileProgram(
