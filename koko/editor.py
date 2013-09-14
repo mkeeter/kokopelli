@@ -173,6 +173,11 @@ class Editor(wx.py.editwindow.EditWindow):
         args = inspect.formatargspec(args.args, args.varargs,
                                      args.keywords, args.defaults)
 
+        # Modify the formatting for a class constructor
+        # (or anything starting with the argument 'self')
+        if args.startswith('(self, '):
+            args = args.replace('(self, ','(') + '    [class]'
+
         # And return them to the hint
         return match[1] + args
 
