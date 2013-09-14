@@ -3,6 +3,7 @@ import wx.py
 
 import re
 import inspect
+import types
 
 import  koko
 from    koko.template import TEMPLATE
@@ -123,7 +124,8 @@ class Editor(wx.py.editwindow.EditWindow):
             except (SyntaxError, ImportError):  continue
 
         for k in imported.keys():
-            if isinstance(imported[k], object):
+            if (isinstance(imported[k], object) and
+                    not isinstance(imported[k], types.FunctionType)):
                 imported[k] = imported[k].__init__
 
         # Filter the functions to only include those that are callable
