@@ -18,6 +18,8 @@ def show_about_box(event=None):
         )
 
     info.SetWebSite('https://github.com/mkeeter/kokopelli')
-    info.SetCopyright('(C) 2012-13 MIT Center for Bits and Atoms')
+    info.SetCopyright(
+'''(C) 2012-13 MIT Center for Bits and Atoms
+(C) 2013 Matt Keeter''')
 
     wx.AboutBox(info)
