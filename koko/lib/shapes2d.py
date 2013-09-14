@@ -21,6 +21,21 @@ def circle(x0, y0, r):
 ################################################################################
 
 def triangle(x0, y0, x1, y1, x2, y2):
+    # Find the angles of the points about the center
+    xm = (x0 + x1 + x2) / 3.
+    ym = (y0 + y1 + y2) / 3.
+    angles = [math.atan2(y - ym, x - xm) for x, y in [(x0,y0), (x1,y1), (x2,y2)]]
+
+    # Sort the angles so that the smallest one is first
+    if angles[1] < angles[0] and angles[1] < angles[2]:
+        angles = [angles[1], angles[2], angles[0]]
+    elif angles[2] < angles[0] and angles[2] < angles[1]:
+        angles = [angles[2], angles[0], angles[1]]
+
+    # Enforce that points must be in clockwise order by swapping if necessary
+    if angles[2] > angles[1]:
+        x0, y0, x1, y1 = x1, y1, x0, y0
+
     def edge(x, y, dx, dy):
         # dy*(X-x)-dx*(Y-y)
         return '-*f%(dy)g-Xf%(x)g*f%(dx)g-Yf%(y)g' % locals()
