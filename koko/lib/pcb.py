@@ -63,7 +63,7 @@ class PCB(object):
             points.append(A)
             if (A.x != B.x):
                 points.append(Point(B.x, A.y))
-        points.append(B)
+        if A.y != B.y:  points.append(B)
         self.connections.append(Connection(width, *points))
 
     def connectV(self, *args, **kwargs):
@@ -78,7 +78,7 @@ class PCB(object):
             points.append(A)
             if (A.y != B.y):
                 points.append(Point(A.x, B.y))
-        points.append(B)
+        if A.x != B.x:  points.append(B)
         self.connections.append(Connection(width, *points))
 
 ################################################################################
