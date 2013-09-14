@@ -47,9 +47,9 @@ class UniversalOutput(OutputPanel):
         power_lo = chr((320*values['power']) % 256)
         self.file.write("p%c%c" % (power_hi, power_lo))
 
-        self.file.write("a%c" % 2)
+        self.file.write("a%c" % 2) # air assist on high
 
-        scale = 1000/25.4 # The laser's tick is 600 DPI
+        scale = 1000/25.4 # The laser's tick is 1000 DPI
         xoffset = values['xmin']*scale
         yoffset = values['ymin']*scale
         xy = lambda x,y: (xoffset + scale*x, yoffset + scale*y)
