@@ -14,6 +14,8 @@ class PCB(object):
         self.components  = []
         self.connections = []
 
+        self._cutout = None
+
     @property
     def traces(self):
         L = [c.pads for c in self.components] + [c.traces for c in self.connections]
@@ -29,18 +31,22 @@ class PCB(object):
         L = [c.pin_labels for c in self.components if c.pin_labels is not None]
         return reduce(operator.add, L) if L else None
 
-    def shapes(self, labels=True):
-        if labels:
-            T = []
-            if self.pin_labels:
-                T.append(s2d.color(self.pin_labels, (255, 90, 60)))
-            if self.part_labels:
-                T.append(s2d.color(self.part_labels, (20, 200, 20)))
-            if self.traces:
-                T.append(s2d.color(self.traces, (125, 90, 60)))
-            return T
-        else:
-            return self.traces,
+    @property
+    def layout(self):
+        T = []
+        if self.part_labels:
+            T.append(s2d.color(self.part_labels, (125, 200, 60)))
+        if self.pin_labels:
+            T.append(s2d.color(self.pin_labels, (255, 90, 60)))
+        if self.traces:
+            T.append(s2d.color(self.traces, (125, 90, 60)))
+        return T
+
+    @property
+    def cutout(self):
+        if self._cutout is not None:    return self._cutout
+        return s2d.rectangle(self.x0, self.x0 + self.width,
+                             self.y0, self.y0 + self.height)
 
     def __iadd__(self, rhs):
         if isinstance(rhs, Component):
@@ -55,7 +61,7 @@ class PCB(object):
         ''' Connects a set of pins or points, traveling first
             horizontally then vertically
         '''
-        width = kwargs['width'] if 'width' in kwargs else 0.008
+        width = kwargs['width'] if 'width' in kwargs else 0.016
         points = []
         for A, B in zip(args[:-1], args[1:]):
             if not isinstance(A, BoundPin):     A = Point(*A)
@@ -70,7 +76,7 @@ class PCB(object):
         ''' Connects a set of pins or points, travelling first
             vertically then horizontally.
         '''
-        width = kwargs['width'] if 'width' in kwargs else 0.008
+        width = kwargs['width'] if 'width' in kwargs else 0.016
         points = []
         for A, B in zip(args[:-1], args[1:]):
             if not isinstance(A, BoundPin):     A = Point(*A)
@@ -128,7 +134,7 @@ class Component(object):
 
     @property
     def label(self):
-        return text(self.name, self.x, self.y, 0.05)
+        return text(self.name, self.x, self.y, 0.03)
 
 ################################################################################
 
@@ -220,6 +226,21 @@ class C_1206(Component):
     pins = [Pin(-0.06, 0, _pad_1206), Pin(0.06, 0, _pad_1206)]
     prefix = 'C'
 
+_pad_SJ = s2d.rectangle(-0.02, 0.02, -0.03, 0.03)
+class SJ(Component):
+    ''' Solder jumper
+    '''
+    pins = [Pin(-0.029, 0, _pad_SJ), Pin(0.029, 0, _pad_SJ)]
+    prefix = 'SJ'
+
+_pad_SOD_123 = s2d.rectangle(-0.02, 0.02, -0.024, 0.024)
+class D_SOD_123(Component):
+    ''' Diode
+    '''
+    pins = [Pin(-0.07, 0, _pad_SOD_123, 'A'),
+            Pin(0.07, 0, _pad_SOD_123, 'C')]
+    prefix = 'D'
+
 
 ################################################################################
 # Connectors
@@ -232,16 +253,16 @@ class USB_mini_B(Component):
         Hirose UX60-MB-5ST
     '''
     pins = [
-        Pin(0.063,   0.36, _pad_USB_trace, 'G'),
-        Pin(0.0315,  0.36, _pad_USB_trace),
-        Pin(0,       0.36, _pad_USB_trace, '+'),
-        Pin(-0.0315, 0.36, _pad_USB_trace, '-'),
-        Pin(-0.063,  0.36, _pad_USB_trace, 'V'),
+        Pin(0.063,   0.24, _pad_USB_trace, 'G'),
+        Pin(0.0315,  0.24, _pad_USB_trace),
+        Pin(0,       0.24, _pad_USB_trace, '+'),
+        Pin(-0.0315, 0.24, _pad_USB_trace, '-'),
+        Pin(-0.063,  0.24, _pad_USB_trace, 'V'),
 
-        Pin( 0.165, 0.33, _pad_USB_foot),
-        Pin(-0.165, 0.33, _pad_USB_foot),
-        Pin( 0.165, 0.12, _pad_USB_foot),
-        Pin(-0.165, 0.12, _pad_USB_foot)
+        Pin( 0.165, 0.21, _pad_USB_foot),
+        Pin(-0.165, 0.21, _pad_USB_foot),
+        Pin( 0.165, 0.0, _pad_USB_foot),
+        Pin(-0.165, 0.0, _pad_USB_foot)
     ]
     prefix = 'J'
 
@@ -323,6 +344,15 @@ class Regulator_SOT23(Component):
     ]
     prefix = 'U'
 
+################################################################################
+#   Clock crystals
+################################################################################
+_pad_XTAL_NX5032GA = s2d.rectangle(-.039,.039,-.047,.047)
+
+class XTAL_NX5032GA(Component):
+    pins = [Pin(-0.079, 0, _pad_XTAL_NX5032GA),
+            Pin(0.079, 0, _pad_XTAL_NX5032GA)]
+    prefix = 'X'
 
 ################################################################################
 # Atmel microcontrollers
@@ -376,5 +406,16 @@ class ATmega88_TQFP(Component):
         x -= 0.031
     del x, y
     prefix = 'U'
-    
 
+
+################################################################################
+#   CBA logo
+################################################################################
+_pin_circle_CBA = s2d.circle(0, 0, 0.02)
+_pin_square_CBA = s2d.rectangle(-0.02, 0.02, -0.02, 0.02)
+class CBA(Component):
+    pins = []
+    for i in range(3):
+        for j in range(3):
+            pin = _pin_circle_CBA if i == 2-j and j >= 1 else _pin_square_CBA
+            pins.append(Pin(0.06*(i-1), 0.06*(j-1), pin))
