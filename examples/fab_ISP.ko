@@ -1,0 +1,139 @@
+"""
+examples/fab_ISP.ko
+
+The fab in-circuit programmer, demonstrating kokopelli's PCB
+design library.
+
+Based on hello.ISP.44.cad:
+http://academy.cba.mit.edu/classes/embedded_programming/hello.ISP.44.cad
+[Neil Gershenfeld 2/10/11, based on FabISP designed by David Mellis]
+"""
+
+from koko.lib.pcb import *
+
+# Initialize the circuit board with xy position, width, and height
+pcb = PCB(0, 0, 0.805, 1.68)
+
+# We use an ATtiny44 as the brains of the programmer
+IC1 = ATtiny44_SOIC(0.51, 0.67, 0, 'IC1\nt44')
+pcb += IC1
+
+# Add an ISP header to program the programmer
+J1 = Header_ISP(IC1.x + 0.05, IC1[7].y - 0.24, 90, 'SPI')
+pcb += J1
+
+# Connect the in-circuit programming header to the chip
+pcb.connectH(IC1['PA4'], J1['SCK'])
+pcb.connectH(IC1['PA5'], J1['MISO'])
+pcb.connectH(IC1['PA6'], (IC1[7].x, J1.y), J1['MOSI'])
+pcb.connectH(IC1['PA3'], (J1['RST'].x+0.05, J1['RST'].y), J1['RST'])
+
+# Create a solder jumper and connect it to RST
+SJ1 = SJ(IC1['PA6'].x - 0.07, J1['RST'].y, 90, 'SJ1')
+pcb += SJ1
+pcb.connectV(
+    J1['RST'],
+    (J1['SCK'].x + 0.05, J1['SCK'].y - 0.08),
+    (J1['MOSI'].x - 0.05, J1['MOSI'].y - 0.08),
+    (SJ1[1].x, J1['MOSI'].y+0.08),
+    SJ1[1])
+pcb.connectH(IC1['PB3'], SJ1[0])
+
+# Add the USB port
+J2 = USB_mini_B(IC1.x-0.02, pcb.height - 0.04, 180, 'J2 USB')
+pcb += J2
+
+R1 = R_1206(J2[5].x + 0.09, J2[5].y - 0.1, 0, "R1\n1k")
+pcb += R1
+pcb.connectH(R1[1], J2[4])
+
+R2 = R_1206(R1[2].x, R1.y - 0.143, 90, "R2\n499")
+pcb += R2
+pcb.connectV(R1[2], R2[2])
+pcb.connectH(R2[1], (R2.x+0.075, R1.y+0.06), J2['V'])
+
+SJ2 = R_1206(R2.x - 0.015, R2.y - 0.2, 90, "SJ2")
+pcb += SJ2
+pcb.connectH(J1['V'], (SJ2.x+0.02, SJ2[1].y), SJ2[1])
+pcb.connectH(SJ2[2], R2[1])
+pcb.connectV(
+    (IC1['GND'].x-0.01, IC1['GND'].y),
+    (J1['MISO'].x+0.085, SJ2.y),
+    (J1['GND'].x, J1['GND'].y-0.11),
+    J1['GND'])
+
+# Add a pair of diodes to limit voltages
+D1 = D_SOD_123(J2['+'].x, R2[2].y, 0, "D1\n3.3V")
+pcb += D1
+pcb.connectV(J2['G'], D1[1])
+pcb.connectV(R1[1], D1[2])
+D2 = D_SOD_123(D1[1].x, D1.y - 0.07, 0, "\nD2 3.3V")
+pcb += D2
+
+# Connect the diode anodes
+pcb.connectH(D2[1], D1[1])
+pcb.connectH(D2[2], J2['+'])
+
+R3 = R_1206(D2.x+0.04, D2.y-0.15, 90, 'R3\n100')
+pcb += R3
+pcb.connectH(IC1['PB2'], R3[1])
+pcb.connectH(IC1['PA7'], R3[1])
+pcb.connectH(R3[2], D2[2])
+
+R4 = R_1206(D1[2].x-0.01, R3.y, 90, 'R4\n100')
+pcb += R4
+pcb.connectH(IC1['PA0'], R4[1])
+pcb.connectH(R4[2], D1[2])
+
+# Ground the diodes
+pcb.connectH(D2[1], (D2[1].x, R3.y), (IC1['GND'].x-0.01, IC1['GND'].y))
+
+R5 = R_1206(SJ1.x-0.07, J1['GND'].y, 90, 'R5\n10k')
+pcb += R5
+pcb.connectH(R2[1], (R2.x+0.075, R5[1].y-0.085), R5[1])
+pcb.connectH(SJ1[2], R5[2])
+
+C1 = C_1206(R5.x-0.1, R5.y, 90, "C1\n1uF")
+pcb += C1
+pcb.connectH((R5.x, R5[1].y-0.085), C1[1])
+pcb.connectH(J1['GND'], C1[2])
+
+# Add the clock crystal
+XTAL1 = XTAL_NX5032GA(IC1.x-0.27, IC1['PB0'].y-0.025, 90, '20\nMHz')
+pcb += XTAL1
+pcb.connectH(IC1['PB0'], XTAL1[2])
+pcb.connectH(IC1['PB1'], XTAL1[1])
+# and loading capacitors for the clock crystal
+C2 = C_1206(XTAL1.x-0.12, XTAL1.y+0.12, 90, 'C2\n10pF')
+pcb += C2
+pcb.connectV(XTAL1[2], C2[2])
+C3 = C_1206(XTAL1.x-0.12, XTAL1.y-0.12, 90, 'C3\n10pF')
+pcb += C3
+pcb.connectV(XTAL1[1], C3[1])
+pcb.connectV(C2[1], C3[2])
+# Connect the loading caps to ground
+pcb.connectH(
+    (C1.x, C1.y),
+    (C2.x-0.06, XTAL1.y),
+    (C2.x, XTAL1.y))
+
+# Loop VCC around to connect to IC1
+pcb.connectH(
+    (C1.x, C1[1].y-0.085),
+    (C2.x-0.095, R3.y),
+    (D2[1].x-0.05, R3[1].y),
+    IC1['VCC'])
+
+# Add the CBA logo
+pcb += CBA(0.15, pcb.height-0.16)
+
+
+# Select one of these options:
+#   Layout shows parts with labels and colors
+#   Traces is simply the black and white trace cutout
+#   Cutout is the board outline
+
+cad.shapes = pcb.layout
+#cad.shape = pcb.traces
+#cad.shape = pcb.cutout
+
