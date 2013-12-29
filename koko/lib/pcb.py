@@ -19,17 +19,23 @@ class PCB(object):
     @property
     def traces(self):
         L = [c.pads for c in self.components] + [c.traces for c in self.connections]
-        return reduce(operator.add, L) if L else None
+        shape = reduce(operator.add, L) if L else None
+        shape.bounds = self.cutout.bounds
+        return shape
 
     @property
     def part_labels(self):
         L = [c.label for c in self.components if c.label is not None]
-        return reduce(operator.add, L) if L else None
+        shape = reduce(operator.add, L) if L else None
+        shape.bounds = self.cutout.bounds
+        return shape
 
     @property
     def pin_labels(self):
         L = [c.pin_labels for c in self.components if c.pin_labels is not None]
-        return reduce(operator.add, L) if L else None
+        shape = reduce(operator.add, L) if L else None
+        shape.bounds = self.cutout.bounds
+        return shape
 
     @property
     def layout(self):
