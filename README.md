@@ -25,10 +25,6 @@ In that course, I worked on [fast geometry solvers](http://fab.cba.mit.edu/class
 
 This work grew into my [Master's thesis](http://cba.mit.edu/docs/theses/13.05.Keeter.pdf) at the MIT [Center for Bits and Atoms](http://cba.mit.edu).  This thesis focused on volumetric CAD/CAM workflows.  Now that it is complete, I'm releasing this tool for others to use and develop.  It has already been used by folks in [How to Make (Almost) Anything](http://fab.cba.mit.edu/classes/863.12/) and [Fab Academy](http://www.fabacademy.org/), but I'm excited to offer it to a larger community.
 
-License
-=======
-This work may be reproduced, modified, distributed, performed, and displayed for any purpose, but must acknowledge the `kokopelli` project. Copyright is retained and must be preserved. The work is provided as is; no warranty is provided, and users accept all liability.
-
 Copyright
 =========
 (c) 2012-2013 Massachusetts Institute of Technology  
