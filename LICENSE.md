@@ -1,11 +1,11 @@
 License
 =======
 
-This work is available under two different licenses, listed below, based on your needs.
+This work is available under two different licensing options:
 
 
 The [CBA](https://cba.mit.edu) License
-======================================
+--------------------------------------
 (c) 2012-2013 Massachusetts Institute of Technology  
 (c) 2013 Matt Keeter
 
@@ -13,7 +13,7 @@ This work may be reproduced, modified, distributed, performed, and displayed for
 
 
 The MIT License
-===============
+---------------
 (c) 2012-2013 Massachusetts Institute of Technology  
 (c) 2013 Matt Keeter
 
