@@ -4,7 +4,7 @@
 
 #include <png.h>
 
-#include "formats/png.h"
+#include "formats/png_image.h"
 
 void save_png16L(const char *output_file_name, const int ni, const int nj,
                  const float bounds[6], uint16_t const*const*const pixels)

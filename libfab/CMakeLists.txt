@@ -31,7 +31,7 @@ add_library(fab SHARED
 
     cam/toolpath.c cam/distance.c cam/slices.c
 
-    formats/png.c formats/stl.c formats/mesh.c
+    formats/png_image.c formats/stl.c formats/mesh.c
 
     util/region.c util/vec3f.c util/path.c
 )
