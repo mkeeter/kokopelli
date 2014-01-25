@@ -77,8 +77,8 @@ setup(
 # Copy libtree
 shutil.copy('../../libfab/libfab.dylib',
             'dist/kokopelli.app/Contents/Frameworks/libfab.dylib')
-shutil.copytree('/Library/Frameworks/libpng.framework',
-            'dist/kokopelli.app/Contents/Frameworks/libpng.framework')
+shutil.copy('/usr/local/lib/libpng.dylib',
+            'dist/kokopelli.app/Contents/Frameworks/libpng.dylib')
 
 # Copy the readme and examples into the distribution directory, then zip it up
 shutil.rmtree('build')
