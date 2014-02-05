@@ -13,13 +13,13 @@ except ImportError:
     print "kokopelli error: wx import failed!"
     sys.exit(1)
 else:
-    if wx.version()[:3] != '2.9':
-        print "\n\nkokopelli error:  wxPython2.9 required"
+    if float(wx.version()[:3]) < 2.9:
+        print "\n\nkokopelli error:  wxPython 2.9 or 3.0 required"
         if 'Linux' in os.uname():
-            print "Run the script named install_wxpython2.9.sh in the util folder"
+            print "Run the script named install_wxpython3.0.sh in the util folder"
             print "to automatically build and install the newer version.\n"
         elif 'Darwin' in os.uname():
-            print "Download wxPython2.9-osx-docs-demos-cocoa-py2.7 from"
+            print "Download wxPython3.0-osx-cocoa-py2.7 from"
             print "http://wxpython.org/download.php and install it.\n"
         sys.exit(1)
 print '\r'+' '*80+'\r[|||||-----]    importing koko',
