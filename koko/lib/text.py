@@ -483,7 +483,7 @@ shape.width = 0.6
 _glyphs['z'] = shape
 
 
-shape = MathTree.Constant(0)
+shape = MathTree.Constant(1)
 shape.bounds = [0,0,0,0,None,None,None]
 shape.shape = True
 shape.width = 0.55
