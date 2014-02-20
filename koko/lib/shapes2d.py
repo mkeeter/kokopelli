@@ -56,7 +56,12 @@ def triangle(x0, y0, x1, y1, x2, y2):
 def right_triangle(x0, y0, h):
     corner = MathTree.max(MathTree('-f%fX' % x0),MathTree('-f%fY' % y0))
     corner.shape = True
-    return corner & MathTree('-X-f%f-Yf%f' % (x0+h, y0))
+    shape = corner & MathTree('-X-f%f-Yf%f' % (x0+h, y0))
+    shape.xmin = x0
+    shape.xmax = x0 + h
+    shape.ymin = y0
+    shape.ymax = y0 + h
+    return shape
 
 ################################################################################
 
