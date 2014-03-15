@@ -323,9 +323,9 @@ class NMOS_SOT23(Component):
         Fairchild NDS355AN
     '''
     pins = [
-        Pin(0.045, -0.0375, 'G'),
-        Pin(0.045,  0.0375, 'S'),
-        Pin(-0.045, 0, 'D')
+        Pin(0.045, -0.0375, _pad_SOT23, 'G'),
+        Pin(0.045,  0.0375, _pad_SOT23, 'S'),
+        Pin(-0.045, 0, _pad_SOT23, 'D')
     ]
     prefix = 'Q'
 
@@ -334,9 +334,9 @@ class PMOS_SOT23(Component):
         Fairchild NDS356AP
     '''
     pins = [
-        Pin(-0.045, -0.0375, 'G'),
-        Pin(-0.045,  0.0375, 'S'),
-        Pin(0.045, 0, 'D')
+        Pin(-0.045, -0.0375, _pad_SOT23, 'G'),
+        Pin(-0.045,  0.0375, _pad_SOT23, 'S'),
+        Pin(0.045, 0, _pad_SOT23, 'D')
     ]
     prefix = 'Q'
 
@@ -344,9 +344,9 @@ class Regulator_SOT23(Component):
     '''  SOT23 voltage regulator
     '''
     pins = [
-        Pin(-0.045, -0.0375, 'Out'),
-        Pin(-0.045,  0.0375, 'In'),
-        Pin(0.045, 0, 'GND')
+        Pin(-0.045, -0.0375, _pad_SOT23, 'Out'),
+        Pin(-0.045,  0.0375, _pad_SOT23, 'In'),
+        Pin(0.045, 0, _pad_SOT23, 'GND')
     ]
     prefix = 'U'
 
