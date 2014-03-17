@@ -50,10 +50,10 @@ tooth &= reflect_y(tooth)
 # advantage of bilateral tooth symmetry.
 if N % 2:
     tooth &= -X
-    teeth = reduce(operator.add, [rotate(tooth, i*360/N)
+    teeth = reduce(operator.add, [rotate(tooth, i*360./N)
                                   for i in range(N)])
 else:
-    teeth = reduce(operator.add, [rotate(tooth, i*360/N)
+    teeth = reduce(operator.add, [rotate(tooth, i*360./N)
                                   for i in range(N/2)])
 
 teeth += circle(0, 0, RR)
