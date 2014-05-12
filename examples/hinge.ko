@@ -1,0 +1,43 @@
+##    Geometry header    ##
+[(koko.prims.points.Point, {'y': '3.68116250962', 'x': '6.6241576341', 'name': 'corner'}),(koko.prims.points.Point, {'y': 'corner.y', 'x': '3.96428776181', 'name': 'border'}),(koko.prims.utils.Slider, {'name': 'esw_slider', 'min': '0', 'max': '0.5', 'value': '0.12974617506', 'y': '2.36389504454', 'x': '10.2595197251', 'size': '5'}),(koko.prims.utils.Slider, {'name': 'esl_slider', 'min': '1', 'max': '5', 'value': '1.4', 'y': '0.128180535766', 'x': '10.379580192', 'size': '5'}),(koko.prims.utils.Slider, {'name': 'wt_slider', 'min': '0', 'max': '0.5', 'value': '0.207806851754', 'y': '-2.07664232583', 'x': '10.4804981458', 'size': '5'})]
+##    End of geometry header    ##
+from koko.lib.shapes import *
+import operator
+import math
+
+# ##############################################################
+# Driving parameters:
+# These values are taken from UI handles; click and drag the
+# sliders and points to modify the hinge.
+esw =  esw_slider.value  # Empty space thickness
+esl =  esl_slider.value  # Empty space length
+wt  =  wt_slider.value   # Web thickness
+w   =  corner.x          # Half of sheet width
+h   =  corner.y          # Half of sheet height
+# ##############################################################
+
+# Calculate how many cutouts we need in the x and y direction,
+# based on living hinge parameters and the sheet size
+x_count = int(math.ceil((border.x - esw/2 - wt) / (esw + wt)))
+y_count = int(math.ceil(h / (esl + 2*esw + wt)))
+
+# This is the basic shape for the cutout:
+# It's a rectangle with circular caps at the top and bottom
+es = (rectangle(-esw/2, esw/2, -esl/2, esl/2) +
+      circle(0,esl/2,esw/2) + circle(0,-esl/2,esw/2))
+
+# Tile the cutout object in the vertical direction
+es = reduce(operator.add,
+        [move(es, 0, i*(esl + esw + wt))
+         for i in range(-y_count, y_count + 1)])
+
+# Tile horizontally with interleaved offset cutouts.
+print x_count
+cutout = reduce(operator.add,
+        [move(es, i * (esw + wt), 0)
+         for i in range(-x_count, x_count + 1, 2)] +
+        [move(es, i * (esw + wt), esl/2 + esw)
+         for i in range(-x_count + 1, x_count, 2)])
+
+# Finally, subtract the cutouts from the hinge shape
+cad.shape = rectangle(-w,w,-h,h) - cutout

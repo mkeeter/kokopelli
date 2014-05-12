@@ -1,0 +1,7 @@
+from koko.lib.shapes import *
+from math import sqrt
+
+cad.shapes = [
+    blend(sphere(i, 0, 0, 0.5),
+          cube(i,i+1,0, 1,0,0.5), sqrt(i)*0.25)
+    for i in range(0,10,2)]
