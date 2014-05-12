@@ -15,7 +15,7 @@ In addition, models can be saved as `.svg` and water-tight `.stl` files.
 Download
 ========
 `kokopelli` has been tested on Mac OS 10.6+ and Ubuntu 12.04 LTS.  
-A Mac application is available [here](http://tmp.cba.mit.edu/web/mkeeter/kokopelli.zip).  
+A Mac application is available [here](http://mattkeeter.com/projects/kokopelli/kokopelli.zip).  
 To build from source, check out the instructions on the [wiki](https://github.com/mkeeter/kokopelli/wiki/Installing).
 
 Background
