@@ -38,6 +38,9 @@ except OSError: pass
 try:    shutil.rmtree('kokopelli.app')
 except OSError: pass
 
+try:    shutil.rmtree('examples')
+except OSError: pass
+
 # Modify a line in __init__.py to store current hash
 git_hash = subprocess.check_output(
     "git log --pretty=format:'%h' -n 1".split(' '))[1:-1]
@@ -88,12 +91,14 @@ shutil.os.remove('kokopelli.py')
 shutil.move('dist/kokopelli.app', '.')
 shutil.rmtree('dist')
 
+shutil.copytree('../../examples', './examples')
 subprocess.call(
-    'zip -r kokopelli README kokopelli.app ../../examples'.split(' ')
+    'tar -cvzf kokopelli.tar.gz README kokopelli.app examples'.split(' ')
 )
+shutil.rmtree('examples')
 
 if 'mkeeter' in subprocess.check_output('whoami') and git_hash[-1] != '+':
     print "Uploading to mattkeeter.com (Ctrl+C to cancel)"
     subprocess.call(
-        'scp kokopelli.zip mkeeter@mattkeeter.com:mattkeeter.com/projects/kokopelli/kokopelli.zip'.split(' ')
+        'scp kokopelli.tar.gz mkeeter@mattkeeter.com:mattkeeter.com/projects/kokopelli/kokopelli.tar.gz'.split(' ')
     )
