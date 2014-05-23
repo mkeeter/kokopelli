@@ -12,6 +12,14 @@ The CAM tools enable path planning for two, three, and five-axis machines.  At t
 
 In addition, models can be saved as `.svg` and water-tight `.stl` files.
 
+Warning
+=======
+`kokopelli` stores designs as Python scripts and executes them.  This means that you can do cool things like using `numpy` to process arrays, load and process images with `PIL`, or even scrape web data and use it to inform designs.
+
+However, it also means that bad actors can write malicious scripts.
+
+As such, **do not open a .ko file from an untrusted source** without first examining it in a text editor to confirm that it is not malicious.
+
 Download
 ========
 `kokopelli` has been tested on Mac OS 10.6+ and Ubuntu 12.04 LTS.  
