@@ -67,7 +67,8 @@ APP = ['kokopelli.py']
 DATA_FILES = glob.glob('../../koko/lib/*.py')
 
 OPTIONS = {'argv_emulation': True,
-           'iconfile':'ko.icns'}
+           'iconfile':'ko.icns',
+           'includes':'koko.lib.pcb,koko.lib.shapes'}
 
 # Run py2app to bundle everything.
 setup(
