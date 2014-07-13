@@ -31,7 +31,7 @@ void mesh_reserve_v(Mesh* const mesh, const uint32_t vcount)
         if (mesh->valloc)   mesh->valloc *= 2;
         else                mesh->valloc  = 2;
         mesh->vdata = realloc(
-            mesh->vdata, sizeof(*mesh->tdata)*6*mesh->valloc
+            mesh->vdata, sizeof(*mesh->vdata)*6*mesh->valloc
         );
     }
 }
