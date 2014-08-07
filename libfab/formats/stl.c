@@ -5,6 +5,26 @@
 #include <formats/stl.h>
 #include <formats/mesh.h>
 
+uint32_t read_int(FILE* file)
+{
+    struct {
+        uint32_t i;
+        char c;
+    } ret;
+    char * buf = fgets((char*)&ret, 5, file);
+    return ret.i;
+}
+
+float read_float(FILE* file)
+{
+    struct {
+        float f;
+        char c;
+    } ret;
+    char * buf = fgets((char*)&ret, 5, file);
+    return ret.f;
+}
+
 Mesh* load_stl(const char* filename)
 {
     FILE* input = fopen(filename, "rb");
@@ -17,53 +37,71 @@ Mesh* load_stl(const char* filename)
     // Skip the STL file header
     fseek(input, 80, SEEK_SET);
     // Read in the triangle count
-    fscanf(input, "%4c", (char*)&mesh->tcount);
+    mesh->tcount = read_int(input);
+    mesh->vcount = mesh->tcount * 3;
 
     // Allocate space for the incoming triangles and vertices
     mesh_reserve_t(mesh, mesh->tcount);
-    mesh_reserve_v(mesh, mesh->vcount*3);
+    mesh_reserve_v(mesh, mesh->vcount);
 
     for (int t=0; t < mesh->tcount; ++t) {
-
         // Current position in the vertex buffer
         // (each triangle is 3 vertices with 6 floats each)
         const unsigned v = t * 18;
+        float normal[3];
 
-        // Ignore the normal vector
-        for (int c=0; c < 12; ++c)   getc(input);
+        // First read the normal vector
+        normal[0] = read_float(input);
+        normal[1] = read_float(input);
+        normal[2] = read_float(input);
 
         // Read 3 sets of 3 floats (each 4 bytes)
-        fscanf(input, "%12c", (char*)&(mesh->vdata[v]));
-        fscanf(input, "%12c", (char*)&(mesh->vdata[v+6]));
-        fscanf(input, "%12c", (char*)&(mesh->vdata[v+12]));
-
-        // Ignore attribute byte count
-        for (int c=0; c < 2; ++c)   getc(input);
-
-        // Find triangle plane vectors
-        const float a1 = mesh->vdata[v+6] - mesh->vdata[v],
-                    b1 = mesh->vdata[v+12] - mesh->vdata[v],
-                    a2 = mesh->vdata[v+7] - mesh->vdata[v+1],
-                    b2 = mesh->vdata[v+13] - mesh->vdata[v+1],
-                    a3 = mesh->vdata[v+8] - mesh->vdata[v+2],
-                    b3 = mesh->vdata[v+14] - mesh->vdata[v+2];
-
-        // Get normal with cross product
-        const float nx = a2*b3 - a3*b2,
-                    ny = a3*b1 - a1*b3,
-                    nz = a1*b2 - a2*b1;
-
-        // And save the normal in the vertex buffer
-        for (int i=0; i < 3; ++i) {
-            mesh->vdata[v+3+i*6] = nx;
-            mesh->vdata[v+4+i*6] = ny;
-            mesh->vdata[v+5+i*6] = nz;
+        for (int j=0; j < 18; j+=6) {
+            float X = read_float(input);
+            float Y = read_float(input);
+            float Z = read_float(input);
+            mesh->X.lower = fmin(mesh->X.lower, X);
+            mesh->X.upper = fmax(mesh->X.upper, X);
+            mesh->Y.lower = fmin(mesh->Y.lower, Y);
+            mesh->Y.upper = fmax(mesh->Y.upper, Y);
+            mesh->Z.lower = fmin(mesh->Z.lower, Z);
+            mesh->Z.upper = fmax(mesh->Z.upper, Z);
+            mesh->vdata[v+j] = X;
+            mesh->vdata[v+1+j] = Y;
+            mesh->vdata[v+2+j] = Z;
+            mesh->vdata[v+3+j] = normal[0];
+            mesh->vdata[v+4+j] = normal[1];
+            mesh->vdata[v+5+j] = normal[2];
         }
 
+        // Recompute the normal if it was not done in the file
+        if (normal[0] == 0.0 && normal[1] == 0 && normal[2] == 0.0) {
+            const float a1 = mesh->vdata[v+6] - mesh->vdata[v],
+                        b1 = mesh->vdata[v+12] - mesh->vdata[v],
+                        a2 = mesh->vdata[v+7] - mesh->vdata[v+1],
+                        b2 = mesh->vdata[v+13] - mesh->vdata[v+1],
+                        a3 = mesh->vdata[v+8] - mesh->vdata[v+2],
+                        b3 = mesh->vdata[v+14] - mesh->vdata[v+2];
 
-        mesh->tdata[t*3]     = t*3;
-        mesh->tdata[t*3 + 1] = t*3 + 1;
-        mesh->tdata[t*3 + 2] = t*3 + 2;
+            // Get normal with cross product
+            const float nx = a2*b3 - a3*b2,
+                        ny = a3*b1 - a1*b3,
+                        nz = a1*b2 - a2*b1;
+
+            // And save the normal in the vertex buffer
+            for (int i=0; i < 3; ++i) {
+                mesh->vdata[v+3+i*6] = nx;
+                mesh->vdata[v+4+i*6] = ny;
+                mesh->vdata[v+5+i*6] = nz;
+            }
+        }
+
+        // Ignore attribute byte count
+        fseek(input, 2, SEEK_CUR);
+
+        mesh->tdata[t*3]     = v;
+        mesh->tdata[t*3 + 1] = v + 6;
+        mesh->tdata[t*3 + 2] = v + 12;
     }
 
     fclose(input);
