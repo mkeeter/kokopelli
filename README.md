@@ -1,3 +1,9 @@
+`kokopelli` is deprecated
+=========================
+Its successors are [Antimony](https://github.com/mkeeter/antimony) and [Ao](https://github.com/mkeeter/ao).
+
+--------------------------------------------------------------------------------------------------------
+
 About
 =====
 `kokopelli` is an open-source tool for computer-aided design and manufacturing (CAD/CAM).
